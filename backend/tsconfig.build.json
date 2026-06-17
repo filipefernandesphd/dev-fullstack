@@ -2,8 +2,20 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "compilerOptions": {
+      "types": [
+        "node"
+      ] // remove vitest/globals do build
+    },
   },
-  "include": ["src"],
-  "exclude": ["tests", "vitest.config.ts", "node_modules", "dist"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "tests",
+    "vitest.config.ts",
+    "node_modules",
+    "dist"
+  ]
 }
