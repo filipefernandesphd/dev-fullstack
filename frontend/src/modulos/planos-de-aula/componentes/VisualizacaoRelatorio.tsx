@@ -3,6 +3,8 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
+
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
@@ -29,6 +31,33 @@ type Props = {
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
   // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+
+  // Feedback temporário exibido após copiar o relatório para a área de
+  // transferência (volta a null após alguns segundos).
+  const [copiado, setCopiado] = useState(false);
+
+  /**
+   * Copia o texto do relatório para a área de transferência usando a API
+   * nativa do navegador. Em caso de falha (ou navegador sem suporte), apenas
+   * ignora silenciosamente — é uma ação de conveniência.
+   */
+  async function aoCopiar() {
+    try {
+      await navigator.clipboard.writeText(planoFinal.relatorio);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    } catch {
+      // Sem suporte à área de transferência: nada a fazer.
+    }
+  }
+
+  /**
+   * Abre a caixa de diálogo de impressão do navegador, permitindo imprimir ou
+   * salvar o plano como PDF.
+   */
+  function aoImprimir() {
+    window.print();
+  }
 
   return (
     <section>
@@ -93,9 +122,24 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
       */}
       <pre>{planoFinal.relatorio}</pre>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      {/*
+        Ações sobre o relatório. "Novo plano" mantém EXATAMENTE esse rótulo
+        (os testes dependem dele). "Copiar" e "Imprimir" são ações novas de
+        conveniência. A classe "acoes" alinha os botões lado a lado.
+      */}
+      <div className="acoes">
+        <button type="button" onClick={aoCopiar}>
+          {copiado ? 'Copiado!' : 'Copiar'}
+        </button>
+
+        <button type="button" onClick={aoImprimir}>
+          Imprimir
+        </button>
+
+        <button type="button" onClick={onReiniciar}>
+          Novo plano
+        </button>
+      </div>
     </section>
   );
 }

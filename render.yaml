@@ -1,0 +1,40 @@
+# render.yaml — Infraestrutura como código para o deploy do backend no Render.
+#
+# Este arquivo descreve o serviço web do backend (Express). Ao conectar o
+# repositório no Render, ele lê este arquivo e cria o serviço automaticamente
+# (Blueprint). As variáveis marcadas com `sync: false` NÃO ficam versionadas:
+# você as define manualmente no painel do Render (são segredos/valores de
+# ambiente). O banco de dados de produção é o MongoDB Atlas (cluster free M0),
+# informado via MONGO_URL.
+
+services:
+  - type: web
+    name: meuplanoai-backend
+    runtime: node
+    plan: free
+    # O código do backend fica na subpasta ./backend do repositório.
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    # O Render injeta a porta via variável PORT (já lida pelo projeto).
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Provedor de IA (Gemini, free tier). Defina os valores no painel.
+      - key: AI_API_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+      - key: AI_MODEL
+        value: gemini-2.0-flash
+      - key: AI_API_KEY
+        sync: false # segredo — preencher no painel do Render
+
+      # Banco de dados de produção (MongoDB Atlas). String de conexão completa,
+      # ex.: mongodb+srv://<usuario>:<senha>@<cluster>/meuplanoai
+      - key: MONGO_URL
+        sync: false # segredo — preencher no painel do Render
+
+      # Domínio do frontend no Vercel, para liberar o CORS.
+      # Ex.: https://meuplanoai.vercel.app
+      - key: CORS_ORIGIN
+        sync: false # preencher no painel do Render após o deploy do Vercel

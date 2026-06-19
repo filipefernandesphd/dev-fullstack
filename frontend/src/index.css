@@ -9,18 +9,95 @@
   os componentes React com muitas classes.
 */
 
-/* Variáveis de cor e medidas reutilizáveis (custom properties do CSS). */
+/*
+  Variáveis de cor e medidas reutilizáveis (custom properties do CSS).
+
+  As cores ficam TODAS aqui (inclusive fundos de campos, banners e código) para
+  que o tema escuro precise apenas redefini-las em um único lugar, sem repetir
+  seletores. O tema ativo é controlado pelo atributo data-tema no <html>.
+*/
 :root {
+  color-scheme: light;
+
   --cor-fundo: #f3f4f6;
   --cor-superficie: #ffffff;
   --cor-texto: #1f2937;
   --cor-texto-suave: #6b7280;
   --cor-primaria: #2563eb;
   --cor-primaria-escura: #1d4ed8;
+  --cor-primaria-fundo: #eff6ff;
   --cor-borda: #d1d5db;
+  --cor-campo: #ffffff;
   --cor-erro: #dc2626;
+  --cor-erro-fundo: #fef2f2;
+  --cor-erro-borda: #fecaca;
+  --cor-codigo-fundo: #f9fafb;
   --raio: 8px;
   --sombra: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /*
+    Degradê "espacial" do fundo: brilhos radiais suaves (como uma nebulosa)
+    sobre a cor base. No tema claro é discreto, para não atrapalhar a leitura.
+  */
+  --gradiente-fundo:
+    radial-gradient(
+      ellipse 80% 60% at 18% 8%,
+      rgba(59, 130, 246, 0.28),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 88% 18%,
+      rgba(139, 92, 246, 0.26),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 60% at 50% 105%,
+      rgba(14, 165, 233, 0.22),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #eef2fb 0%, #dfe7f5 100%);
+}
+
+/* Tema escuro: redefine apenas as cores; o restante do CSS não muda. */
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+
+  --cor-fundo: #0f172a;
+  --cor-superficie: #1e293b;
+  --cor-texto: #e2e8f0;
+  --cor-texto-suave: #94a3b8;
+  --cor-primaria: #3b82f6;
+  --cor-primaria-escura: #60a5fa;
+  --cor-primaria-fundo: #1e3a5f;
+  --cor-borda: #334155;
+  --cor-campo: #0f172a;
+  --cor-erro: #f87171;
+  --cor-erro-fundo: #3f1d1d;
+  --cor-erro-borda: #7f1d1d;
+  --cor-codigo-fundo: #0f172a;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  /*
+    No tema escuro o degradê fica mais intenso, evocando um céu estrelado:
+    nebulosas azul/violeta/ciano sobre um fundo quase preto-azulado.
+  */
+  --gradiente-fundo:
+    radial-gradient(
+      ellipse 80% 60% at 18% 8%,
+      rgba(56, 189, 248, 0.16),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 88% 18%,
+      rgba(139, 92, 246, 0.2),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 60% at 50% 105%,
+      rgba(37, 99, 235, 0.14),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #0b1020 0%, #0f172a 55%, #0a0f1f 100%);
 }
 
 /* Reset básico: remove margens padrão e usa box-sizing previsível. */
@@ -33,16 +110,66 @@ body {
   /* Pilha de fontes do sistema (mesma usada pela maioria dos webapps). */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
     Arial, sans-serif;
+  /* Cor base (fallback) + degradê espacial por cima, fixo ao rolar a página. */
   background-color: var(--cor-fundo);
+  background-image: var(--gradiente-fundo);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
   color: var(--cor-texto);
   line-height: 1.5;
+  /* Suaviza a troca entre tema claro e escuro. */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Container principal: largura máxima e centralizado na página. */
 .app {
+  position: relative; /* âncora para o botão de tema (posicionado no canto). */
   max-width: 720px;
   margin: 0 auto;
   padding: 2rem 1rem 4rem;
+}
+
+/* --- Botão de alternância de tema (claro/escuro) ------------------------- */
+/*
+  Fica no canto superior direito. As regras usam ".app .tema-toggle" para
+  vencer, por especificidade, o estilo padrão de ".app button" (que é azul).
+*/
+.app .tema-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--cor-texto);
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.app .tema-toggle:hover:not(:disabled) {
+  background-color: var(--cor-fundo);
+  border-color: var(--cor-primaria);
+}
+
+/*
+  Texto visível apenas para leitores de tela (acessibilidade): descreve a ação
+  do botão, já que o ícone é puramente decorativo.
+*/
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Título / marca da aplicação. */
@@ -82,7 +209,7 @@ body {
   color: inherit;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  background-color: #fff;
+  background-color: var(--cor-campo);
 }
 
 /* Destaque ao focar um campo. */
@@ -126,8 +253,8 @@ body {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   color: var(--cor-erro);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  background-color: var(--cor-erro-fundo);
+  border: 1px solid var(--cor-erro-borda);
   border-radius: var(--raio);
 }
 
@@ -163,8 +290,159 @@ body {
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: inherit;
-  background-color: #f9fafb;
+  background-color: var(--cor-codigo-fundo);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   padding: 1rem;
+}
+
+/* ==========================================================================
+   Melhorias de UX
+   ========================================================================== */
+
+/* --- Spinner de carregamento (decorativo, dentro dos botões) ------------- */
+/*
+  Um círculo que gira continuamente. É marcado com aria-hidden no JSX, então
+  não interfere no nome acessível do botão.
+*/
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 0.4em;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respeita usuários que preferem menos movimento na tela. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* --- Banner de erro destacado ------------------------------------------- */
+/*
+  Reaproveita o estilo base de [role="alert"] e adiciona ênfase: barra lateral
+  colorida e alinhamento do ícone com o texto.
+*/
+.app .banner-erro {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-weight: 500;
+  border-left: 4px solid var(--cor-erro);
+}
+
+/* --- Contador de caracteres (validação no cliente) ----------------------- */
+.app .contador {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+}
+
+/* Quando ainda não atingiu o mínimo, destacamos em vermelho. */
+.app .contador--insuficiente {
+  color: var(--cor-erro);
+}
+
+/* --- Indicador de etapas (Entrada -> Revisão -> Relatório) --------------- */
+.indicador-etapas {
+  margin-bottom: 1.5rem;
+}
+
+.indicador-etapas ol {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.indicador-etapas__item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+/* Número de cada etapa em um círculo. */
+.indicador-etapas__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--cor-borda);
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+/* Etapa atual: destaque em azul. */
+.indicador-etapas__item--ativa {
+  color: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  background-color: var(--cor-primaria-fundo);
+}
+
+.indicador-etapas__item--ativa .indicador-etapas__numero {
+  background-color: var(--cor-primaria);
+}
+
+/* Etapas já concluídas: número em verde. */
+.indicador-etapas__item--concluida .indicador-etapas__numero {
+  background-color: #16a34a;
+}
+
+/* --- Tipografia e responsividade ---------------------------------------- */
+/*
+  Em telas estreitas (celular) reduzimos o respiro lateral, empilhamos os
+  botões de ação e quebramos o indicador de etapas em coluna para não
+  comprimir os rótulos.
+*/
+@media (max-width: 600px) {
+  .app {
+    padding: 1.25rem 0.75rem 3rem;
+  }
+
+  .app form,
+  .app section {
+    padding: 1rem;
+  }
+
+  /* Botões ocupam a largura toda e empilham. */
+  .app .acoes {
+    flex-direction: column;
+  }
+
+  .app .acoes button {
+    width: 100%;
+  }
+
+  /* O indicador de etapas vira uma coluna alinhada à esquerda. */
+  .indicador-etapas ol {
+    flex-direction: column;
+  }
+
+  .indicador-etapas__item {
+    justify-content: flex-start;
+  }
 }
