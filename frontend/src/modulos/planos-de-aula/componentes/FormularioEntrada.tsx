@@ -65,7 +65,7 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
         id="descricao"
         rows={4}
         value={descricao}
-        placeholder="Ex.: Quero uma aula de 50 minutos sobre introdução à engenharia de software para graduação."
+        placeholder="Ex.: Crie um plano de aula para disciplina de Introdução a Banco de Dados, curso de nível Técnico utilizando taxonomia de Bloom e método ROPES, 5 aulas com 5h de duração cada."
         onChange={(evento) => setDescricao(evento.target.value)}
         aria-describedby="contador-descricao"
       />
