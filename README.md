@@ -6,6 +6,23 @@ O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturada
 
 > Este projeto é exclusivo para fins didáticos para a disciplina de **Desenvolvimento Full Stack** do curso de Especialização em Desenvolvimento Full Stack do IF Sudeste MG - *Campus* Manhuaçu, ofertado pelo [Prof. Dr. Filipe Fernandes](filipefernandesphd.com).
 
+## Aplicação implantada
+
+* **Frontend (Vercel):** https://dev-fullstack-pearl.vercel.app/
+* **Backend (Render):** https://meuplanoai-backend.onrender.com
+
+> Observação: no plano gratuito do Render o backend "dorme" após inatividade; a primeira chamada pode levar ~30s (cold start). O Gemini free tier também possui limite de requisições.
+
+## Deploy
+
+A aplicação é implantada em três serviços gratuitos:
+
+1. **MongoDB Atlas** — cluster free **M0**. Crie um usuário de banco, libere o acesso de rede (`0.0.0.0/0` para o ambiente didático) e copie a *connection string* (`mongodb+srv://...`). Ela será o `MONGO_URL` do Render.
+2. **Render (backend)** — conecte o repositório (há um `render.yaml` na raiz). Defina as variáveis: `AI_API_URL`, `AI_MODEL`, `AI_API_KEY`, `MONGO_URL` (Atlas) e `CORS_ORIGIN` (domínio do Vercel). A porta é injetada automaticamente via `PORT`.
+3. **Vercel (frontend)** — projeto com raiz em `frontend`. Defina `VITE_API_URL` com a URL pública do backend no Render **antes do build** (o Vite "inlina" essa variável no momento da compilação).
+
+Após o deploy do Vercel, atualize a seção **Aplicação implantada** acima com a URL pública e ajuste `CORS_ORIGIN` no Render para esse mesmo domínio.
+
 ## Estrutura do Projeto
 
 O mono-repositório contém a implementação do app **MeuPlano.AI** e está estruturado da seguinte forma:
