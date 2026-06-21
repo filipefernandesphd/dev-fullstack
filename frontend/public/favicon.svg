@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'>
-  <defs>
-  </defs>
-  <circle cx="32" cy="32" r="32" fill="#7c3aed" />
-  
-  <text x='50%' y='calc(50% + 0px)' transform='translate(0, 0)' text-anchor='middle' dominant-baseline='middle' fill='#ffffff' font-family="Lato, system-ui, Arial" font-weight='600' font-size='32px'>IA</text>
-</svg>
