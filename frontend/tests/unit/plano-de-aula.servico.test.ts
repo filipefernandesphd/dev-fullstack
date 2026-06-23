@@ -158,7 +158,7 @@ describe('PlanoDeAulaServico', () => {
         }),
       );
 
-      const resultado = await servico.gerarPlanoFinal(rascunhoValido);
+      const resultado = await servico.gerarPlanoFinal(rascunhoValido, 'sessao-teste');
 
       expect(resultado).toEqual(planoFinal);
 
@@ -176,7 +176,7 @@ describe('PlanoDeAulaServico', () => {
         }),
       );
 
-      await expect(servico.gerarPlanoFinal(rascunhoValido)).rejects.toThrow(
+      await expect(servico.gerarPlanoFinal(rascunhoValido, 'sessao-teste')).rejects.toThrow(
         'O rascunho do plano de aula é obrigatório.',
       );
     });

@@ -25,7 +25,7 @@ type Props = {
   /** Função para atualizar a descrição */
   onDescricaoChange: (valor: string) => void;
   /** Referência para o campo de texto (foco) */
-  descricaoRef: RefObject<HTMLTextAreaElement>;
+  descricaoRef: RefObject<HTMLTextAreaElement | null>;
   /** Lista de planos salvos */
   planosSalvos: PlanoSalvo[];
   /** Controla visibilidade da lista */
