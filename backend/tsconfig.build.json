@@ -3,10 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"],
-    "skipLibCheck": true,
-    "noEmit": false
+    "types": [],
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src"],
   "exclude": ["tests", "vitest.config.ts", "node_modules", "dist"]
 }
