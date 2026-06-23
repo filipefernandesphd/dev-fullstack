@@ -13,6 +13,8 @@ import type {
   PlanoSalvoCompleto,
 } from './plano-de-aula.tipos'
 
+import { mapearErroParaUsuario } from '../../utils/erros';
+
 /**
  * Serviço responsável pela comunicação com a API de planos de aula.
  *
@@ -153,36 +155,71 @@ class PlanoDeAulaServico {
     return dados.dados;
   }
 
+
+
+
   /**
    * Envia uma requisição POST em JSON e devolve apenas o campo "dados" da
    * resposta padrão da API.
-   *
-   * @param caminho Caminho do endpoint (ex.: "/planos-de-aula/rascunho").
-   * @param corpo Objeto que será serializado como JSON no corpo da requisição.
-   * @returns Conteúdo do campo "dados" da resposta, já tipado.
-   * @template T Tipo esperado em "dados".
    */
   private async enviarPost<T>(caminho: string, corpo: unknown): Promise<T> {
-    const resposta = await fetch(`${this.urlBase}${caminho}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(corpo),
-    });
+    try {
+      const resposta = await fetch(`${this.urlBase}${caminho}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(corpo),
+      });
 
-    const dados = (await resposta
-      .json()
-      .catch(() => null)) as RespostaApi<T> | null;
+      const dados = (await resposta
+        .json()
+        .catch(() => null)) as RespostaApi<T> | null;
 
-    if (!resposta.ok || !dados || !dados.sucesso) {
-      const mensagem =
-        dados?.mensagem ?? 'Não foi possível comunicar com o servidor.';
-      throw new Error(mensagem);
+      if (!resposta.ok || !dados || !dados.sucesso) {
+        // --- LOG COMPLETO NO CONSOLE PARA O DESENVOLVEDOR ---
+        console.group('🐛 ERRO DETALHADO - enviarPost');
+        console.log('📌 Endpoint:', caminho);
+        console.log('📌 Status HTTP:', resposta.status);
+        console.log('📌 Corpo da requisição:', corpo);
+        console.log('📌 Resposta da API:', dados);
+        console.log('📌 Headers:', Object.fromEntries(resposta.headers));
+        console.groupEnd();
+
+        // Extrai a mensagem bruta do erro
+        const mensagemBruta = dados?.mensagem ?? 'Não foi possível comunicar com o servidor.';
+
+        // Mapeia para uma mensagem amigável
+        const erroMapeado = mapearErroParaUsuario(new Error(mensagemBruta));
+
+        // Lança com a mensagem amigável (mas o erro completo está no console)
+        throw new Error(erroMapeado.mensagem);
+      }
+
+      return dados.dados;
+    } catch (erro) {
+      // Se já for um erro que criamos, repassa
+      if (erro instanceof Error && erro.message) {
+        // Log adicional para erros de rede
+        if (erro.message.includes('Failed to fetch') || erro.message.includes('NetworkError')) {
+          console.group('🌐 ERRO DE REDE');
+          console.log('📌 Mensagem:', erro.message);
+          console.log('📌 Stack:', erro.stack);
+          console.groupEnd();
+        }
+        throw erro;
+      }
+
+      // Fallback para erros desconhecidos
+      console.group('❌ ERRO DESCONHECIDO');
+      console.log('📌 Erro:', erro);
+      console.groupEnd();
+
+      const erroMapeado = mapearErroParaUsuario(erro);
+      throw new Error(erroMapeado.mensagem);
     }
-
-    return dados.dados;
   }
+
 }
 
 // Exporta a classe (para testes) e uma instância pronta para uso nos componentes.

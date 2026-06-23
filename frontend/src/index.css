@@ -320,11 +320,11 @@ body {
 
 /* --- Mensagem de erro --- */
 .erro-mensagem {
+  width: 100%;
   margin-top: 0.5rem;
-  padding: 0.6rem 1rem;
+  padding: 0rem 1rem;
   color: #dc2626;
   background-color: #fef2f2;
-  border: 1px solid #fecaca;
   border-radius: var(--raio);
 }
 
@@ -428,6 +428,95 @@ body {
   flex-wrap: wrap;
 }
 
+/* --- BANNER DE ERRO MELHORADO --- */
+.erro-banner {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+.erro-banner[role="alert"] {
+  background-color: #fef2f2;
+  border-left-color: #dc2626;
+}
+
+.erro-icone {
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+
+.erro-conteudo {
+  flex: 1;
+}
+
+.erro-mensagem {
+  font-weight: 600;
+  color: #991b1b;
+  margin: 0;
+}
+
+.erro-dica {
+  font-size: 0.9rem;
+  color: #7f1d1d;
+  margin: 0.25rem 0 0 0;
+  opacity: 0.8;
+}
+
+.erro-fechar {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #991b1b;
+  padding: 0 0.25rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.erro-fechar:hover {
+  opacity: 1;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Avisos (nível info) --- */
+.erro-banner.info {
+  background-color: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.erro-banner.info .erro-mensagem {
+  color: #1e40af;
+}
+
+.erro-banner.info .erro-dica {
+  color: #1e3a8a;
+}
+
+/* --- Avisos (nível aviso) --- */
+.erro-banner.aviso {
+  background-color: #fffbeb;
+  border-left-color: #f59e0b;
+}
+
+.erro-banner.aviso .erro-mensagem {
+  color: #92400e;
+}
+
+.erro-banner.aviso .erro-dica {
+  color: #78350f;
+}
+
 /* --- Responsividade (Melhoria 5) --- */
 @media (max-width: 640px) {
   .app {
@@ -463,3 +552,4 @@ body {
     gap: 0.2rem;
   }
 }
+

@@ -62,7 +62,7 @@ function App() {
     setSessaoId(id);
   }, []);
 
-  // --- FUNÇÕES EXISTENTES (MODIFICADAS) ---
+  // --- FUNÇÕES EXISTENTES (MODIFICADAS COM LOGS) ---
 
   /**
    * Gera o rascunho a partir da descrição e avança para a etapa de revisão.
@@ -71,6 +71,7 @@ function App() {
   async function aoGerarRascunho(descricao: string) {
     // Validação no cliente: mínimo 10 caracteres
     if (!descricao || descricao.trim().length < 10) {
+      console.info('Validação: descrição muito curta');
       setErro('A descrição deve ter pelo menos 10 caracteres.');
       return;
     }
@@ -79,10 +80,27 @@ function App() {
     setErro(null);
 
     try {
+      console.log('Iniciando geração de rascunho...');
+      console.log('Descrição:', descricao);
+
       const resultado = await planoDeAulaServico.gerarRascunho(descricao);
+
+      console.log('Rascunho gerado com sucesso!');
+      console.log('Título:', resultado.titulo);
+
       setRascunho(resultado);
       setEtapa('formulario');
     } catch (e) {
+      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
+      console.group('ERRO - aoGerarRascunho');
+      console.log('Descrição:', descricao);
+      console.log('Erro:', e);
+      if (e instanceof Error) {
+        console.log('Mensagem:', e.message);
+        console.log('Stack:', e.stack);
+      }
+      console.groupEnd();
+
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
       setCarregando(false);
@@ -101,13 +119,31 @@ function App() {
     setErro(null);
 
     try {
+      console.log('Melhorando rascunho...');
+      console.log('Orientacoes:', orientacoes);
+      console.log('Rascunho atual:', rascunhoAtual.titulo);
+
       const melhorado = await planoDeAulaServico.melhorarRascunho(
         rascunhoAtual,
         orientacoes,
       );
+
+      console.log('Rascunho melhorado com sucesso!');
+      console.log('Novo título:', melhorado.titulo);
+
       setRascunho(melhorado);
       setVersaoRascunho((versao) => versao + 1);
     } catch (e) {
+      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
+      console.group('ERRO - aoMelhorar');
+      console.log('Orientacoes:', orientacoes);
+      console.log('Erro:', e);
+      if (e instanceof Error) {
+        console.log('Mensagem:', e.message);
+        console.log('Stack:', e.stack);
+      }
+      console.groupEnd();
+
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
       setCarregando(false);
@@ -123,13 +159,32 @@ function App() {
     setErro(null);
 
     try {
+      console.log('Gerando versão final...');
+      console.log('Sessão ID:', sessaoId);
+      console.log('Rascunho:', rascunhoRevisado.titulo);
+
       const resultado = await planoDeAulaServico.gerarPlanoFinal(
         rascunhoRevisado,
         sessaoId,
       );
+
+      console.log('Versão final gerada com sucesso!');
+      console.log('Título:', resultado.titulo);
+      console.log('Tamanho do relatório:', resultado.relatorio.length, 'caracteres');
+
       setPlanoFinal(resultado);
       setEtapa('relatorio');
     } catch (e) {
+      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
+      console.group('ERRO - aoGerarFinal');
+      console.log('Sessão ID:', sessaoId);
+      console.log('Erro:', e);
+      if (e instanceof Error) {
+        console.log('Mensagem:', e.message);
+        console.log('Stack:', e.stack);
+      }
+      console.groupEnd();
+
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
       setCarregando(false);
@@ -141,6 +196,7 @@ function App() {
    * (MODIFICADO: limpa descrição e foca no campo)
    */
   function aoReiniciar() {
+    console.log('Reiniciando fluxo...');
     setEtapa('entrada');
     setRascunho(null);
     setPlanoFinal(null);
@@ -155,16 +211,40 @@ function App() {
    * Lista planos salvos da sessão atual.
    */
   async function aoListarPlanosSalvos() {
-    if (!sessaoId) return;
+    if (!sessaoId) {
+      console.warn('Tentativa de listar planos sem sessaoId');
+      return;
+    }
 
     setCarregandoLista(true);
     setErro(null);
 
     try {
+      console.log('Buscando planos salvos...');
+      console.log('Sessão ID:', sessaoId);
+
       const planos = await planoDeAulaServico.listarPlanosSalvos(sessaoId);
+
+      console.log(`${planos.length} planos encontrados`);
+      if (planos.length > 0) {
+        console.log('Planos:', planos.map(p => p.titulo).join(', '));
+      } else {
+        console.log('Nenhum plano salvo encontrado');
+      }
+
       setPlanosSalvos(planos);
       setMostrarLista(!mostrarLista);
     } catch (e) {
+      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
+      console.group('ERRO - aoListarPlanosSalvos');
+      console.log('Sessão ID:', sessaoId);
+      console.log('Erro:', e);
+      if (e instanceof Error) {
+        console.log('Mensagem:', e.message);
+        console.log('Stack:', e.stack);
+      }
+      console.groupEnd();
+
       setErro(e instanceof Error ? e.message : 'Erro ao carregar planos salvos');
     } finally {
       setCarregandoLista(false);
@@ -175,21 +255,34 @@ function App() {
    * Carrega um plano salvo pelo ID, reconstruindo o estado da aplicação.
    */
   async function aoCarregarPlanoSalvo(id: string) {
-    if (!sessaoId) return;
+    if (!sessaoId) {
+      console.warn('Tentativa de carregar plano sem sessaoId');
+      return;
+    }
 
     setCarregando(true);
     setErro(null);
 
     try {
+      console.log('Carregando plano salvo...');
+      console.log('ID do plano:', id);
+      console.log('Sessão ID:', sessaoId);
+
       const plano = await planoDeAulaServico.buscarPlanoPorId(id, sessaoId);
 
       if (!plano) {
+        console.warn('Plano não encontrado - ID:', id);
         setErro('Plano não encontrado');
         return;
       }
 
+      console.log('Plano encontrado!');
+      console.log('Título:', plano.titulo);
+
       // Reconstrói o rascunho a partir do JSON
       const rascunhoReconstruido = JSON.parse(plano.plano) as PlanoDeAulaRascunho;
+
+      console.log('Rascunho reconstruído com sucesso');
 
       setRascunho(rascunhoReconstruido);
       setPlanoFinal({
@@ -199,7 +292,20 @@ function App() {
       });
       setEtapa('relatorio');
       setMostrarLista(false);
+
+      console.log('Plano carregado e exibido com sucesso!');
     } catch (e) {
+      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
+      console.group('ERRO - aoCarregarPlanoSalvo');
+      console.log('ID do plano:', id);
+      console.log('Sessão ID:', sessaoId);
+      console.log('Erro:', e);
+      if (e instanceof Error) {
+        console.log('Mensagem:', e.message);
+        console.log('Stack:', e.stack);
+      }
+      console.groupEnd();
+
       setErro(e instanceof Error ? e.message : 'Erro ao carregar plano');
     } finally {
       setCarregando(false);
@@ -210,7 +316,7 @@ function App() {
 
   return (
     <main className="app">
-      <h1>📝 MeuPlano.AI</h1>
+      <h1>MeuPlano.AI</h1>
       <p className="subtitulo">Crie planos de aula com inteligência artificial</p>
 
       {/* Etapa 1: entrada em linguagem natural */}

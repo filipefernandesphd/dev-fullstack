@@ -91,9 +91,20 @@ function FormularioEntrada({
         />
 
         {erro && (
-          <p id="erro-descricao" className="erro-mensagem" role="alert">
-            {erro}
-          </p>
+          <div className="erro-banner" role="alert">
+            
+              <p className="erro-mensagem">{erro}</p>
+              {erro.includes('temporariamente') && (
+                <p className="erro-dica">Dica: Espere alguns minutos e tente novamente.</p>
+              )}
+              {erro.includes('limite') && (
+                <p className="erro-dica">O limite de uso é renovado diariamente.</p>
+              )}
+              {erro.includes('conexão') && (
+                <p className="erro-dica">Verifique sua internet e recarregue a página.</p>
+              )}
+            
+          </div>
         )}
 
         <button
