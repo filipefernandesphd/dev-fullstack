@@ -1,0 +1,74 @@
+get:
+  summary: Busca um plano específico pelo ID
+  description: Retorna os detalhes completos de um plano salvo
+  tags:
+    - Planos de Aula
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: ID do plano no MongoDB
+      example: "67a1b2c3d4e5f67890123456"
+    - in: query
+      name: sessaoId
+      required: true
+      schema:
+        type: string
+      description: Identificador único da sessão do navegador
+      example: "sessao-12345"
+  responses:
+    '200':
+      description: Plano recuperado com sucesso
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sucesso:
+                type: boolean
+                example: true
+              mensagem:
+                type: string
+                example: Plano recuperado com sucesso
+              dados:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: "67a1b2c3d4e5f67890123456"
+                  titulo:
+                    type: string
+                    example: "Introdução à Ondulatória"
+                  plano:
+                    type: string
+                    example: '{"titulo":"Introdução à Ondulatória","disciplina":"Física"}'
+                  relatorio:
+                    type: string
+                    example: "Plano de Aula: Introdução à Ondulatória..."
+                  sessaoId:
+                    type: string
+                    example: "sessao-12345"
+                  criadoEm:
+                    type: string
+                    format: date-time
+                    example: "2026-06-24T15:30:00.000Z"
+    '400':
+      description: sessaoId ou id não informado
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/erro.yaml'
+    '404':
+      description: Plano não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/erro.yaml'
+    '500':
+      description: Erro interno ao recuperar plano
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/erro.yaml'

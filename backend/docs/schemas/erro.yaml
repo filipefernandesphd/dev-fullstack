@@ -1,0 +1,12 @@
+type: object
+properties:
+  sucesso:
+    type: boolean
+    example: false
+  mensagem:
+    type: string
+    example: Mensagem de erro
+  dados:
+    type: object
+    nullable: true
+    example: null
