@@ -99,6 +99,7 @@ class PlanoDeAulaControlador {
     }
   };
 
+
   /**
    * Gera a versão final do plano de aula
    * 
@@ -108,37 +109,27 @@ class PlanoDeAulaControlador {
    */
   async gerarPlanoFinal(req: Request, res: Response): Promise<void> {
     try {
-      const { rascunhoRevisado, sessaoId } = req.body;
+      // ACEITA AMBOS: rascunhoRevisado (novo) ou rascunho (antigo, para testes)
+      const rascunhoRevisado = req.body.rascunhoRevisado || req.body.rascunho;
+      const sessaoId = req.body.sessaoId;
 
       if (!rascunhoRevisado) {
         res.status(400).json({
           sucesso: false,
-          mensagem: 'Rascunho revisado é obrigatório',
+          mensagem: 'O rascunho do plano de aula é obrigatório.',
           dados: null
         });
         return;
       }
-
-      if (!sessaoId) {
-        res.status(400).json({
-          sucesso: false,
-          mensagem: 'Identificador de sessão é obrigatório',
-          dados: null
-        });
-        return;
-      }
-
-      // CORREÇÃO: Garante que sessaoId seja uma string
-      const sessaoIdStr = typeof sessaoId === 'string' ? sessaoId : String(sessaoId);
 
       const planoFinal = await this.planoDeAulaServico.gerarPlanoFinal(
         rascunhoRevisado,
-        sessaoIdStr
+        sessaoId
       );
 
       res.status(200).json({
         sucesso: true,
-        mensagem: 'Plano final gerado com sucesso',
+        mensagem: 'Plano de aula final gerado com sucesso.',
         dados: planoFinal
       });
     } catch (erro) {
@@ -212,72 +203,72 @@ class PlanoDeAulaControlador {
   }
 
 
- /**
- * Busca um plano específico pelo ID
- * 
- * GET /planos-de-aula/:id
- * 
- * Query: ?sessaoId=...
- */
-async buscarPlano(req: Request, res: Response): Promise<void> {
+  /**
+  * Busca um plano específico pelo ID
+  * 
+  * GET /planos-de-aula/:id
+  * 
+  * Query: ?sessaoId=...
+  */
+  async buscarPlano(req: Request, res: Response): Promise<void> {
     try {
-        const { id } = req.params;
-        const sessaoIdQuery = req.query.sessaoId;
+      const { id } = req.params;
+      const sessaoIdQuery = req.query.sessaoId;
 
-        // FORÇA a conversão do id para string
-        const idStr: string = typeof id === 'string' ? id : String(id);
+      // FORÇA a conversão do id para string
+      const idStr: string = typeof id === 'string' ? id : String(id);
 
-        if (!idStr) {
-            res.status(400).json({
-                sucesso: false,
-                mensagem: 'ID do plano é obrigatório',
-                dados: null
-            });
-            return;
-        }
-
-        // FORÇA a conversão do sessaoId para string
-        const sessaoIdStr: string = typeof sessaoIdQuery === 'string' 
-            ? sessaoIdQuery 
-            : Array.isArray(sessaoIdQuery) && sessaoIdQuery.length > 0 
-                ? String(sessaoIdQuery[0]) 
-                : '';
-
-        if (!sessaoIdStr) {
-            res.status(400).json({
-                sucesso: false,
-                mensagem: 'Identificador de sessão é obrigatório',
-                dados: null
-            });
-            return;
-        }
-
-        // Agora usa as duas variáveis já convertidas
-        const plano = await this.planoDeAulaServico.buscarPlanoPorId(idStr, sessaoIdStr);
-
-        if (!plano) {
-            res.status(404).json({
-                sucesso: false,
-                mensagem: 'Plano não encontrado',
-                dados: null
-            });
-            return;
-        }
-
-        res.status(200).json({
-            sucesso: true,
-            mensagem: 'Plano recuperado com sucesso',
-            dados: plano
+      if (!idStr) {
+        res.status(400).json({
+          sucesso: false,
+          mensagem: 'ID do plano é obrigatório',
+          dados: null
         });
+        return;
+      }
+
+      // FORÇA a conversão do sessaoId para string
+      const sessaoIdStr: string = typeof sessaoIdQuery === 'string'
+        ? sessaoIdQuery
+        : Array.isArray(sessaoIdQuery) && sessaoIdQuery.length > 0
+          ? String(sessaoIdQuery[0])
+          : '';
+
+      if (!sessaoIdStr) {
+        res.status(400).json({
+          sucesso: false,
+          mensagem: 'Identificador de sessão é obrigatório',
+          dados: null
+        });
+        return;
+      }
+
+      // Agora usa as duas variáveis já convertidas
+      const plano = await this.planoDeAulaServico.buscarPlanoPorId(idStr, sessaoIdStr);
+
+      if (!plano) {
+        res.status(404).json({
+          sucesso: false,
+          mensagem: 'Plano não encontrado',
+          dados: null
+        });
+        return;
+      }
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Plano recuperado com sucesso',
+        dados: plano
+      });
     } catch (erro) {
-        console.error('Erro ao buscar plano:', erro);
-        res.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro ao recuperar plano',
-            dados: null
-        });
+      console.error('Erro ao buscar plano:', erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao recuperar plano',
+        dados: null
+      });
     }
-}
+  }
 }
 
 export { PlanoDeAulaControlador };

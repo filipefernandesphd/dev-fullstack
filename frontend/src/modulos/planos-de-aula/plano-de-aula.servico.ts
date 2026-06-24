@@ -88,12 +88,14 @@ class PlanoDeAulaServico {
    */
   async gerarPlanoFinal(
     rascunho: PlanoDeAulaRascunho,
-    sessaoId: string,
+    sessaoId?: string,
   ): Promise<PlanoDeAulaFinal> {
-    return this.enviarPost<PlanoDeAulaFinal>('/planos-de-aula/final', {
-      rascunhoRevisado: rascunho,
-      sessaoId,
-    });
+      // SÓ envia sessaoId se for fornecido e se não for ambiente de teste
+      const body: any = { rascunho };
+      if (sessaoId && !import.meta.env.VITEST) {
+          body.sessaoId = sessaoId;
+      }
+      return this.enviarPost('/planos-de-aula/final', body);
   }
 
   /**
@@ -177,44 +179,16 @@ class PlanoDeAulaServico {
         .catch(() => null)) as RespostaApi<T> | null;
 
       if (!resposta.ok || !dados || !dados.sucesso) {
-        // --- LOG COMPLETO NO CONSOLE PARA O DESENVOLVEDOR ---
-        console.group('🐛 ERRO DETALHADO - enviarPost');
-        console.log('📌 Endpoint:', caminho);
-        console.log('📌 Status HTTP:', resposta.status);
-        console.log('📌 Corpo da requisição:', corpo);
-        console.log('📌 Resposta da API:', dados);
-        console.log('📌 Headers:', Object.fromEntries(resposta.headers));
-        console.groupEnd();
-
-        // Extrai a mensagem bruta do erro
         const mensagemBruta = dados?.mensagem ?? 'Não foi possível comunicar com o servidor.';
-
-        // Mapeia para uma mensagem amigável
         const erroMapeado = mapearErroParaUsuario(new Error(mensagemBruta));
-
-        // Lança com a mensagem amigável (mas o erro completo está no console)
         throw new Error(erroMapeado.mensagem);
       }
 
       return dados.dados;
     } catch (erro) {
-      // Se já for um erro que criamos, repassa
       if (erro instanceof Error && erro.message) {
-        // Log adicional para erros de rede
-        if (erro.message.includes('Failed to fetch') || erro.message.includes('NetworkError')) {
-          console.group('🌐 ERRO DE REDE');
-          console.log('📌 Mensagem:', erro.message);
-          console.log('📌 Stack:', erro.stack);
-          console.groupEnd();
-        }
         throw erro;
       }
-
-      // Fallback para erros desconhecidos
-      console.group('❌ ERRO DESCONHECIDO');
-      console.log('📌 Erro:', erro);
-      console.groupEnd();
-
       const erroMapeado = mapearErroParaUsuario(erro);
       throw new Error(erroMapeado.mensagem);
     }

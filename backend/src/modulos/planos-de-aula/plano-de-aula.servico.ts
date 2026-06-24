@@ -112,7 +112,7 @@ class PlanoDeAulaServico {
      */
     async gerarPlanoFinal(
         rascunhoRevisado: PlanoDeAulaRascunho,
-        sessaoId: string,
+        sessaoId?: string, // <-- OPCIONAL
     ): Promise<PlanoDeAulaFinal> {
         this.validarRascunho(rascunhoRevisado);
 
@@ -124,23 +124,27 @@ class PlanoDeAulaServico {
 
         this.validarPlanoFinal(planoFinal);
 
-        // --- Persistência no MongoDB ---
-        try {
-            console.log('Tentando salvar plano no MongoDB...');
-            console.log('Sessão ID:', sessaoId);
+        // --- Persistência no MongoDB (SÓ SE TIVER sessaoId) ---
+        if (sessaoId) { 
+            try {
+                console.log('Tentando salvar plano no MongoDB...');
+                console.log('Sessão ID:', sessaoId);
 
-            const dadosParaSalvar = {
-                titulo: planoFinal.titulo,
-                plano: JSON.stringify(planoFinal.plano),
-                relatorio: planoFinal.relatorio
-            };
+                const dadosParaSalvar = {
+                    titulo: planoFinal.titulo,
+                    plano: JSON.stringify(planoFinal.plano),
+                    relatorio: planoFinal.relatorio
+                };
 
-            const repositorio = new PlanoDeAulaRepositorio();
-            await repositorio.salvar(dadosParaSalvar, sessaoId);
+                const repositorio = new PlanoDeAulaRepositorio();
+                await repositorio.salvar(dadosParaSalvar, sessaoId);
 
-            console.log('Plano final salvo com sucesso no MongoDB');
-        } catch (erro) {
-            console.error('Erro ao salvar plano no MongoDB (nao critico):', erro);
+                console.log('Plano final salvo com sucesso no MongoDB');
+            } catch (erro) {
+                console.error('Erro ao salvar plano no MongoDB (nao critico):', erro);
+            }
+        } else {
+            console.log('Persistência ignorada: sessaoId não fornecida');
         }
 
         return planoFinal;

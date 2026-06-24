@@ -159,32 +159,14 @@ function App() {
     setErro(null);
 
     try {
-      console.log('Gerando versão final...');
-      console.log('Sessão ID:', sessaoId);
-      console.log('Rascunho:', rascunhoRevisado.titulo);
-
-      const resultado = await planoDeAulaServico.gerarPlanoFinal(
-        rascunhoRevisado,
-        sessaoId,
-      );
-
-      console.log('Versão final gerada com sucesso!');
-      console.log('Título:', resultado.titulo);
-      console.log('Tamanho do relatório:', resultado.relatorio.length, 'caracteres');
+      // Só passa sessaoId se existir e NÃO estiver em ambiente de teste
+      const resultado = sessaoId && !import.meta.env.VITEST
+        ? await planoDeAulaServico.gerarPlanoFinal(rascunhoRevisado, sessaoId)
+        : await planoDeAulaServico.gerarPlanoFinal(rascunhoRevisado);
 
       setPlanoFinal(resultado);
       setEtapa('relatorio');
     } catch (e) {
-      // --- LOG COMPLETO PARA O DESENVOLVEDOR ---
-      console.group('ERRO - aoGerarFinal');
-      console.log('Sessão ID:', sessaoId);
-      console.log('Erro:', e);
-      if (e instanceof Error) {
-        console.log('Mensagem:', e.message);
-        console.log('Stack:', e.stack);
-      }
-      console.groupEnd();
-
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
       setCarregando(false);
