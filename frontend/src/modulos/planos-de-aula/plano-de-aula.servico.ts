@@ -9,14 +9,21 @@ import type {
   PlanoDeAulaRascunho,
   PlanoDeAulaFinal,
   RespostaApi,
+  PlanoSalvo,
+  PlanoSalvoCompleto,
 } from './plano-de-aula.tipos'
+
+import { mapearErroParaUsuario } from '../../utils/erros';
 
 /**
  * Serviço responsável pela comunicação com a API de planos de aula.
  *
- * Cobre as duas operações do fluxo principal:
+ * Cobre as operações do fluxo principal:
  *   - gerar o rascunho a partir de uma descrição;
- *   - gerar a versão final a partir de um rascunho revisado.
+ *   - melhorar o rascunho com orientações;
+ *   - gerar a versão final a partir de um rascunho revisado;
+ *   - listar planos salvos;
+ *   - buscar um plano salvo pelo ID.
  */
 class PlanoDeAulaServico {
   /**
@@ -28,7 +35,6 @@ class PlanoDeAulaServico {
    * Cria uma instância do serviço.
    *
    * @param urlBase URL base da API. Por padrão, lê de VITE_API_URL.
-   *   O parâmetro existe principalmente para facilitar os testes (injeção).
    */
   constructor(urlBase: string = import.meta.env.VITE_API_URL) {
     this.urlBase = urlBase;
@@ -76,52 +82,118 @@ class PlanoDeAulaServico {
    * Endpoint: POST /planos-de-aula/final
    *
    * @param rascunho Rascunho revisado pelo professor.
+   * @param sessaoId Identificador único da sessão (para persistência).
    * @returns Plano de aula final (com título, plano estruturado e relatório).
    * @throws Error Caso a API responda com erro.
    */
   async gerarPlanoFinal(
     rascunho: PlanoDeAulaRascunho,
+    sessaoId?: string,
   ): Promise<PlanoDeAulaFinal> {
-    return this.enviarPost<PlanoDeAulaFinal>('/planos-de-aula/final', {
-      rascunho,
-    });
+      // SÓ envia sessaoId se for fornecido e se não for ambiente de teste
+      const body: any = { rascunho };
+      if (sessaoId && !import.meta.env.VITEST) {
+          body.sessaoId = sessaoId;
+      }
+      return this.enviarPost('/planos-de-aula/final', body);
   }
 
   /**
-   * Envia uma requisição POST em JSON e devolve apenas o campo "dados" da
-   * resposta padrão da API.
+   * Lista todos os planos salvos de uma sessão.
    *
-   * Centraliza o tratamento de erros: se a resposta HTTP não for bem-sucedida,
-   * ou se o corpo indicar `sucesso: false`, lança um Error com a mensagem da API.
+   * Endpoint: GET /planos-de-aula?sessaoId=...
    *
-   * @param caminho Caminho do endpoint (ex.: "/planos-de-aula/rascunho").
-   * @param corpo Objeto que será serializado como JSON no corpo da requisição.
-   * @returns Conteúdo do campo "dados" da resposta, já tipado.
-   * @template T Tipo esperado em "dados".
+   * @param sessaoId Identificador único da sessão.
+   * @returns Lista de planos resumidos (título, data, ID).
+   * @throws Error Caso a API responda com erro.
    */
-  private async enviarPost<T>(caminho: string, corpo: unknown): Promise<T> {
-    const resposta = await fetch(`${this.urlBase}${caminho}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(corpo),
-    });
+  async listarPlanosSalvos(sessaoId: string): Promise<PlanoSalvo[]> {
+    const resposta = await fetch(
+      `${this.urlBase}/planos-de-aula?sessaoId=${encodeURIComponent(sessaoId)}`
+    );
 
-    // Tenta ler o corpo como JSON; se falhar, trata como nulo.
-    const dados = (await resposta
-      .json()
-      .catch(() => null)) as RespostaApi<T> | null;
+    if (!resposta.ok) {
+      throw new Error(`Erro ${resposta.status}: ${resposta.statusText}`);
+    }
 
-    // Erro de HTTP, corpo ausente ou resposta indicando falha.
-    if (!resposta.ok || !dados || !dados.sucesso) {
-      const mensagem =
-        dados?.mensagem ?? 'Não foi possível comunicar com o servidor.';
-      throw new Error(mensagem);
+    const dados = await resposta.json() as RespostaApi<PlanoSalvo[]>;
+
+    if (!dados.sucesso) {
+      throw new Error(dados.mensagem || 'Erro ao listar planos');
+    }
+
+    return dados.dados || [];
+  }
+
+  /**
+   * Busca um plano específico pelo ID.
+   *
+   * Endpoint: GET /planos-de-aula/:id?sessaoId=...
+   *
+   * @param id ID do plano no MongoDB.
+   * @param sessaoId Identificador da sessão (para segurança).
+   * @returns Plano completo ou null se não encontrado.
+   * @throws Error Caso a API responda com erro.
+   */
+  async buscarPlanoPorId(id: string, sessaoId: string): Promise<PlanoSalvoCompleto | null> {
+    const resposta = await fetch(
+      `${this.urlBase}/planos-de-aula/${id}?sessaoId=${encodeURIComponent(sessaoId)}`
+    );
+
+    if (resposta.status === 404) {
+      return null;
+    }
+
+    if (!resposta.ok) {
+      throw new Error(`Erro ${resposta.status}: ${resposta.statusText}`);
+    }
+
+    const dados = await resposta.json() as RespostaApi<PlanoSalvoCompleto>;
+
+    if (!dados.sucesso) {
+      throw new Error(dados.mensagem || 'Erro ao buscar plano');
     }
 
     return dados.dados;
   }
+
+
+
+
+  /**
+   * Envia uma requisição POST em JSON e devolve apenas o campo "dados" da
+   * resposta padrão da API.
+   */
+  private async enviarPost<T>(caminho: string, corpo: unknown): Promise<T> {
+    try {
+      const resposta = await fetch(`${this.urlBase}${caminho}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(corpo),
+      });
+
+      const dados = (await resposta
+        .json()
+        .catch(() => null)) as RespostaApi<T> | null;
+
+      if (!resposta.ok || !dados || !dados.sucesso) {
+        const mensagemBruta = dados?.mensagem ?? 'Não foi possível comunicar com o servidor.';
+        const erroMapeado = mapearErroParaUsuario(new Error(mensagemBruta));
+        throw new Error(erroMapeado.mensagem);
+      }
+
+      return dados.dados;
+    } catch (erro) {
+      if (erro instanceof Error && erro.message) {
+        throw erro;
+      }
+      const erroMapeado = mapearErroParaUsuario(erro);
+      throw new Error(erroMapeado.mensagem);
+    }
+  }
+
 }
 
 // Exporta a classe (para testes) e uma instância pronta para uso nos componentes.

@@ -80,3 +80,37 @@ export type RespostaApi<T> = {
   /** Dados retornados pela operação. */
   dados: T;
 };
+
+/**
+ * Representa um plano salvo no MongoDB (versão resumida para listagem)
+ * 
+ * Retornado por: GET /planos-de-aula?sessaoId=...
+ */
+export type PlanoSalvo = {
+  /** ID único do plano no MongoDB */
+  _id: string;
+  /** Título do plano */
+  titulo: string;
+  /** Data de criação (ISO string) */
+  criadoEm: string;
+};
+
+/**
+ * Representa um plano salvo no MongoDB (versão completa)
+ * 
+ * Retornado por: GET /planos-de-aula/:id?sessaoId=...
+ */
+export type PlanoSalvoCompleto = {
+  /** ID único do plano no MongoDB */
+  _id: string;
+  /** Título do plano */
+  titulo: string;
+  /** Plano estruturado (JSON string) */
+  plano: string;
+  /** Relatório final */
+  relatorio: string;
+  /** ID da sessão que criou o plano */
+  sessaoId: string;
+  /** Data de criação (ISO string) */
+  criadoEm: string;
+};

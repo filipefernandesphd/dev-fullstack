@@ -3,38 +3,60 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
  * Propriedades do componente de visualização do relatório.
  */
 type Props = {
-  /**
-   * Plano de aula final retornado pela API (título, plano e relatório).
-   */
+  /** Plano de aula final retornado pela API. */
   planoFinal: PlanoDeAulaFinal;
 
-  /**
-   * Função chamada ao clicar em "Novo plano", para reiniciar o fluxo.
-   */
+  /** Função chamada ao clicar em "Novo plano". */
   onReiniciar: () => void;
 };
 
 /**
- * Exibe o relatório final do plano de aula, mostrando os dados estruturados do
- * plano e, em seguida, o texto do relatório gerado pela IA.
- *
- * @param props Propriedades do componente.
+ * Exibe o relatório final do plano de aula.
  */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
-  // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+  const [copiado, setCopiado] = useState(false);
+
+  /**
+   * Copia o relatório para a área de transferência (Melhoria 8)
+   */
+  async function aoCopiar() {
+    try {
+      await navigator.clipboard.writeText(planoFinal.relatorio);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Fallback: selecionar o texto manualmente
+      const texto = document.querySelector('.relatorio-texto');
+      if (texto) {
+        const range = document.createRange();
+        range.selectNode(texto);
+        const selecao = window.getSelection();
+        selecao?.removeAllRanges();
+        selecao?.addRange(range);
+        document.execCommand('copy');
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      }
+    }
+  }
 
   return (
     <section>
-      <h2>{planoFinal.titulo}</h2>
+      <div className="relatorio-header">
+        <h2>Relatório Final</h2>
+        <span className="badge-concluido">Concluído</span>
+      </div>
 
-      {/* Dados estruturados do plano, apresentados como um relatório. */}
+      <h3>{planoFinal.titulo}</h3>
+
       <dl className="relatorio-dados">
         <dt>Disciplina</dt>
         <dd>{plano.disciplina}</dd>
@@ -85,17 +107,31 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dd>{plano.avaliacao}</dd>
       </dl>
 
-      {/* Texto corrido do relatório gerado pela IA. */}
       <h3>Relatório</h3>
-      {/*
-        O relatório vem como texto único com quebras de linha.
-        A tag <pre> preserva esses espaços e quebras na exibição.
-      */}
-      <pre>{planoFinal.relatorio}</pre>
+      <div className="relatorio-texto">
+        {planoFinal.relatorio.split('\n').map((paragrafo, i) => (
+          <p key={i}>{paragrafo || '\u00A0'}</p>
+        ))}
+      </div>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      <div className="relatorio-acoes">
+        <button
+          type="button"
+          className="btn-copiar"
+          onClick={aoCopiar}
+          aria-label="Copiar relatório"
+        >
+          {copiado ? 'Copiado!' : 'Copiar relatório'}
+        </button>
+
+        <button
+          type="button"
+          className="btn-novo"
+          onClick={onReiniciar}
+        >
+          Novo plano
+        </button>
+      </div>
     </section>
   );
 }

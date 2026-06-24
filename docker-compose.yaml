@@ -1,6 +1,7 @@
 name: meuplanoai
 
 services:
+  # Backend em desenvolvimento
   backend-dev:
     container_name: backend-dev
     build:
@@ -11,10 +12,13 @@ services:
       - ./backend:/app
       - /app/node_modules
     ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
+      - "3333:3333"
     env_file:
       - ./backend/.env.development
+    depends_on:
+      - mongodb  # Depende do MongoDB
 
+  # Backend para testes
   backend-test:
     container_name: backend-test
     build:
@@ -23,16 +27,10 @@ services:
       target: test
     env_file:
       - ./backend/.env.development
+    depends_on:
+      - mongodb
 
-  ollama:
-    container_name: ollama
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-  # Serviço do frontend (desenvolvimento)
+  # Frontend em desenvolvimento
   frontend-dev:
     container_name: frontend-dev
     build:
@@ -41,14 +39,15 @@ services:
       target: development
     volumes:
       - ./frontend:/app
-      - /app/node_modules                     # Evita apagar node_modules do container
+      - /app/node_modules
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"   # variável a partir de ./.env (host:container)
+      - "5173:5173"
     environment:
-      - FRONTEND_PORT=${FRONTEND_PORT}        # porta usada pelo Vite dentro do container
+      - FRONTEND_PORT=5173
     env_file:
-      - ./frontend/.env.development           # injeta VITE_API_URL no ambiente
+      - ./frontend/.env.development
 
+  # Frontend para testes
   frontend-test:
     container_name: frontend-test
     build:
@@ -56,7 +55,17 @@ services:
       dockerfile: Dockerfile
       target: test
     env_file:
-      - ./frontend/.env.development           # injeta variaveis dentro do ambiente
+      - ./frontend/.env.development
+
+  # MONGODB - Banco de dados
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
 
 volumes:
-  ollama_data: 
+  mongodb_data:  # Volume para guardar os dados do MongoDB

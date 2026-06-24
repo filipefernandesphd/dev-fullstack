@@ -3,17 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": [
-      "node"
-    ] // remove vitest/globals do build
+    "types": [],
+    "skipLibCheck": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "tests",
-    "vitest.config.ts",
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["tests", "vitest.config.ts", "node_modules", "dist"]
 }

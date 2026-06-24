@@ -8,8 +8,6 @@ import { PlanoDeAulaServico, type PlanoDeAulaFinal } from './plano-de-aula.servi
 import type { PlanoDeAulaRascunho } from './plano-de-aula.tipos';
 
 // Importação dos esquemas de validação (Zod) e do utilitário que os executa.
-
-// Validamos a ENTRADA aqui mesmo, no controlador, SEM middleware de validação.
 import {
   esquemaGerarRascunho,
   esquemaMelhorarRascunho,
@@ -20,8 +18,6 @@ import {
 /**
  * Controlador responsável por receber as requisições HTTP relacionadas
  * ao módulo de planos de aula.
- *
- * O controlador atua como uma ponte entre a rota HTTP e o serviço de aplicação.
  */
 class PlanoDeAulaControlador {
   /**
@@ -38,29 +34,12 @@ class PlanoDeAulaControlador {
 
   /**
    * Gera um rascunho de plano de aula a partir de uma descrição em linguagem natural.
-   *
-   * Endpoint relacionado:
-   * POST /planos-de-aula/rascunho
-   * 
-   * Corpo esperado:
-   * {
-   *   "descricao": "Crie um plano de aula sobre introdução à engenharia de software..."
-   * }
-   *
-   * @param req Objeto da requisição HTTP do Express.
-   * @param res Objeto da resposta HTTP do Express.
-   * @returns Resposta HTTP contendo o rascunho do plano de aula ou uma mensagem de erro.
    */
   gerarRascunho = async (
     req: Request,
     res: Response
   ): Promise<Response> => {
     try {
-      /**
-       * Validação de entrada com Zod (sem middleware): aplicamos o esquema
-       * diretamente sobre o corpo da requisição. A mensagem de erro segue o
-       * contrato definido no Swagger.
-       */
       const validacao = validarComEsquema(esquemaGerarRascunho, req.body);
 
       if (!validacao.sucesso) {
@@ -72,16 +51,8 @@ class PlanoDeAulaControlador {
 
       const { descricao } = validacao.dados;
 
-      /**
-       * Capturamos a descrição, ou seja, os campos do plano de aula e devolve um objeto PlanoDeAulaRascunho.
-       */
-      const rascunho = await this.planoDeAulaServico.gerarRascunho(
-        descricao,
-      );
+      const rascunho = await this.planoDeAulaServico.gerarRascunho(descricao);
 
-      /**
-       * Retornamos o rascunho do plano de aula gerado (ainda sem processamento de IA).
-       */
       return res.status(200).json({
         sucesso: true,
         mensagem: 'Rascunho do plano de aula gerado com sucesso.',
@@ -93,32 +64,13 @@ class PlanoDeAulaControlador {
   };
 
   /**
-   * Controlador responsável por melhorar um rascunho de plano de aula já existente.
-   *
-   * Endpoint esperado:
-   * POST /api/planos-de-aula/rascunho/melhorar
-   *
-   * Corpo esperado:
-   * {
-   *   "rascunho": { ... },
-   *   "orientacoes": "Deixe a metodologia mais ativa e participativa."
-   * }
-   *
-   * @param req Requisição HTTP do Express.
-   * @param res Resposta HTTP do Express.
-   * @returns Resposta JSON contendo o rascunho melhorado.
+   * Melhora um rascunho de plano de aula já existente.
    */
   melhorarRascunho = async (
     req: Request,
     res: Response
   ): Promise<Response> => {
     try {
-      /**
-       * Validação de entrada com Zod (sem middleware): o esquema cobre tanto a
-       * presença/estrutura do rascunho quanto a obrigatoriedade das orientações.
-       * Como o rascunho é declarado antes das orientações no esquema, se ambos
-       * faltarem a primeira mensagem retornada é a do rascunho.
-       */
       const validacao = validarComEsquema(esquemaMelhorarRascunho, req.body);
 
       if (!validacao.sucesso) {
@@ -147,97 +99,51 @@ class PlanoDeAulaControlador {
     }
   };
 
-  /**
-   * Gera a versão final do plano de aula em formato de relatório.
-   *
-   * Endpoint relacionado:
-   *
-   * POST /planos-de-aula/final
-   *
-   * Corpo esperado:
-   *
-   * {
-   *   "rascunho": {
-   *     "titulo": "Introdução à Engenharia de Software",
-   *     "disciplina": "Engenharia de Software",
-   *     "curso": "Graduação em Computação",
-   *     "nivel": "Iniciante",
-   *     "duracao": "50 minutos",
-   *     "tema": "Conceitos iniciais de Engenharia de Software",
-   *     "objetivos": ["Compreender o conceito de Engenharia de Software."],
-   *     "conteudos": ["Definição de Engenharia de Software"],
-   *     "metodologia": "Aula expositiva dialogada.",
-   *     "recursos": ["Projetor"],
-   *     "avaliacao": "Participação dos estudantes."
-   *   }
-   * }
-   *
-   * @param req Objeto da requisição HTTP do Express.
-   * @param res Objeto da resposta HTTP do Express.
-   * @returns Resposta HTTP contendo o plano final ou uma mensagem de erro.
-   */
-  gerarPlanoFinal = async (
-    req: Request,
-    res: Response,
-  ): Promise<Response> => {
-    try {
-      /**
-       * Validação de entrada com Zod (sem middleware): o esquema garante que o
-       * rascunho foi enviado e respeita a estrutura esperada.
-       */
-      const validacao = validarComEsquema(esquemaGerarPlanoFinal, req.body);
 
-      if (!validacao.sucesso) {
-        return res.status(400).json({
+  /**
+   * Gera a versão final do plano de aula
+   * 
+   * POST /planos-de-aula/final
+   * 
+   * Body: { rascunhoRevisado: PlanoDeAulaRascunho, sessaoId: string }
+   */
+  async gerarPlanoFinal(req: Request, res: Response): Promise<void> {
+    try {
+      // ACEITA AMBOS: rascunhoRevisado (novo) ou rascunho (antigo, para testes)
+      const rascunhoRevisado = req.body.rascunhoRevisado || req.body.rascunho;
+      const sessaoId = req.body.sessaoId;
+
+      if (!rascunhoRevisado) {
+        res.status(400).json({
           sucesso: false,
-          mensagem: validacao.mensagem,
-          dados: null,
+          mensagem: 'O rascunho do plano de aula é obrigatório.',
+          dados: null
         });
+        return;
       }
 
-      const rascunho: PlanoDeAulaRascunho = validacao.dados.rascunho;
+      const planoFinal = await this.planoDeAulaServico.gerarPlanoFinal(
+        rascunhoRevisado,
+        sessaoId
+      );
 
-      /**
-       * Chama a camada de serviço para gerar a versão final.
-       *
-       * Conforme o prompt atual, o retorno esperado é um JSON com:
-       * - titulo;
-       * - plano;
-       * - relatorio.
-       */
-      const planoFinal: PlanoDeAulaFinal =
-        await this.planoDeAulaServico.gerarPlanoFinal(rascunho);
-
-      return res.status(200).json({
+      res.status(200).json({
         sucesso: true,
         mensagem: 'Plano de aula final gerado com sucesso.',
-        dados: planoFinal,
+        dados: planoFinal
       });
     } catch (erro) {
-      return this.tratarErro(res, erro);
+      console.error('Erro ao gerar plano final:', erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: erro instanceof Error ? erro.message : 'Erro ao gerar plano final',
+        dados: null
+      });
     }
-  };
+  }
 
   /**
-   * Trata erros lançados pela camada de serviço e converte em uma resposta
-   * HTTP padronizada.
-   *
-   * Neste estágio do projeto, as validações simples do corpo da requisição
-   * retornam status 400 diretamente nos métodos do controlador.
-   *
-   * Erros lançados pela camada de serviço retornam status 500, pois podem
-   * envolver falhas na IA, JSON inválido retornado pelo modelo ou problemas
-   * de configuração.
-   *
-   * Futuramente, esse método pode evoluir para diferenciar melhor:
-   *
-   * - erro de validação;
-   * - erro de integração externa;
-   * - erro interno inesperado.
-   *
-   * @param res Objeto da resposta HTTP do Express.
-   * @param erro Erro capturado no bloco try/catch.
-   * @returns Resposta HTTP padronizada de erro.
+   * Trata erros lançados pela camada de serviço.
    */
   private tratarErro(res: Response, erro: unknown): Response {
     const mensagem =
@@ -250,6 +156,118 @@ class PlanoDeAulaControlador {
       mensagem,
       dados: null,
     });
+  }
+
+  /**
+ * Lista todos os planos de aula de uma sessão
+ * 
+ * GET /planos-de-aula
+ * 
+ * Query: ?sessaoId=...
+ */
+  async listarPlanos(req: Request, res: Response): Promise<void> {
+    try {
+      const sessaoIdQuery = req.query.sessaoId;
+
+      // FORÇA a conversão para string
+      const sessaoIdStr: string = typeof sessaoIdQuery === 'string'
+        ? sessaoIdQuery
+        : Array.isArray(sessaoIdQuery) && sessaoIdQuery.length > 0
+          ? String(sessaoIdQuery[0])
+          : '';
+
+      if (!sessaoIdStr) {
+        res.status(400).json({
+          sucesso: false,
+          mensagem: 'Identificador de sessão é obrigatório',
+          dados: null
+        });
+        return;
+      }
+
+      const planos = await this.planoDeAulaServico.listarPlanos(sessaoIdStr);
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Planos recuperados com sucesso',
+        dados: planos
+      });
+    } catch (erro) {
+      console.error('Erro ao listar planos:', erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao recuperar planos salvos',
+        dados: null
+      });
+    }
+  }
+
+
+  /**
+  * Busca um plano específico pelo ID
+  * 
+  * GET /planos-de-aula/:id
+  * 
+  * Query: ?sessaoId=...
+  */
+  async buscarPlano(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const sessaoIdQuery = req.query.sessaoId;
+
+      // FORÇA a conversão do id para string
+      const idStr: string = typeof id === 'string' ? id : String(id);
+
+      if (!idStr) {
+        res.status(400).json({
+          sucesso: false,
+          mensagem: 'ID do plano é obrigatório',
+          dados: null
+        });
+        return;
+      }
+
+      // FORÇA a conversão do sessaoId para string
+      const sessaoIdStr: string = typeof sessaoIdQuery === 'string'
+        ? sessaoIdQuery
+        : Array.isArray(sessaoIdQuery) && sessaoIdQuery.length > 0
+          ? String(sessaoIdQuery[0])
+          : '';
+
+      if (!sessaoIdStr) {
+        res.status(400).json({
+          sucesso: false,
+          mensagem: 'Identificador de sessão é obrigatório',
+          dados: null
+        });
+        return;
+      }
+
+      // Agora usa as duas variáveis já convertidas
+      const plano = await this.planoDeAulaServico.buscarPlanoPorId(idStr, sessaoIdStr);
+
+      if (!plano) {
+        res.status(404).json({
+          sucesso: false,
+          mensagem: 'Plano não encontrado',
+          dados: null
+        });
+        return;
+      }
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Plano recuperado com sucesso',
+        dados: plano
+      });
+    } catch (erro) {
+      console.error('Erro ao buscar plano:', erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao recuperar plano',
+        dados: null
+      });
+    }
   }
 }
 

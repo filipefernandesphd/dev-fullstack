@@ -12,30 +12,19 @@ import type { PlanoDeAulaRascunho } from '../plano-de-aula.tipos';
  * Propriedades do componente de revisão do rascunho.
  */
 type Props = {
-  /**
-   * Rascunho gerado pela IA, usado como valor inicial dos campos.
-   */
+  /** Rascunho gerado pela IA, usado como valor inicial dos campos. */
   rascunhoInicial: PlanoDeAulaRascunho;
 
-  /**
-   * Função chamada ao submeter, recebendo o rascunho (possivelmente editado).
-   */
+  /** Função chamada ao submeter, recebendo o rascunho (possivelmente editado). */
   onGerarFinal: (rascunho: PlanoDeAulaRascunho) => void;
 
-  /**
-   * Função chamada ao pedir melhoria, recebendo o rascunho atual e as
-   * orientações adicionais do professor.
-   */
+  /** Função chamada ao pedir melhoria. */
   onMelhorar: (rascunho: PlanoDeAulaRascunho, orientacoes: string) => void;
 
-  /**
-   * Indica que uma requisição está em andamento (desabilita o botão).
-   */
+  /** Indica que uma requisição está em andamento. */
   carregando: boolean;
 
-  /**
-   * Mensagem de erro a ser exibida (ou null quando não há erro).
-   */
+  /** Mensagem de erro a ser exibida (ou null). */
   erro: string | null;
 };
 
@@ -59,8 +48,6 @@ type CampoLista = 'objetivos' | 'conteudos' | 'recursos';
 
 /**
  * Formulário editável do rascunho do plano de aula.
- *
- * @param props Propriedades do componente.
  */
 function FormularioRascunho({
   rascunhoInicial,
@@ -69,44 +56,29 @@ function FormularioRascunho({
   carregando,
   erro,
 }: Props) {
-  // Estado local com uma cópia editável do rascunho recebido.
   const [rascunho, setRascunho] = useState<PlanoDeAulaRascunho>(rascunhoInicial);
-
-  // Orientações adicionais que o professor pode informar para melhorar o plano.
   const [orientacoes, setOrientacoes] = useState('');
 
-  /**
-   * Atualiza um campo de texto simples do rascunho.
-   */
   function atualizarTexto(campo: CampoTexto, valor: string) {
     setRascunho((atual) => ({ ...atual, [campo]: valor }));
   }
 
-  /**
-   * Atualiza um campo de lista. No formulário, cada item fica em uma linha;
-   * por isso convertemos o texto em array quebrando por quebras de linha.
-   */
   function atualizarLista(campo: CampoLista, valor: string) {
     setRascunho((atual) => ({ ...atual, [campo]: valor.split('\n') }));
   }
 
-  /**
-   * Trata o envio: evita o recarregamento e repassa o rascunho revisado.
-   */
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     onGerarFinal(rascunho);
   }
 
-  /**
-   * Pede a melhoria do rascunho atual usando as orientações informadas.
-   *
-   * É um botão do tipo "button" (não "submit") para não disparar o envio do
-   * formulário (que gera a versão final).
-   */
   function aoMelhorar() {
-    onMelhorar(rascunho, orientacoes);
+    if (orientacoes.trim()) {
+      onMelhorar(rascunho, orientacoes);
+    }
   }
+
+  const orientacoesValidas = orientacoes.trim().length > 0;
 
   return (
     <form onSubmit={aoEnviar}>
@@ -117,6 +89,7 @@ function FormularioRascunho({
         id="titulo"
         value={rascunho.titulo}
         onChange={(e) => atualizarTexto('titulo', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="disciplina">Disciplina</label>
@@ -124,6 +97,7 @@ function FormularioRascunho({
         id="disciplina"
         value={rascunho.disciplina}
         onChange={(e) => atualizarTexto('disciplina', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="curso">Curso</label>
@@ -131,6 +105,7 @@ function FormularioRascunho({
         id="curso"
         value={rascunho.curso}
         onChange={(e) => atualizarTexto('curso', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="nivel">Nível</label>
@@ -138,6 +113,7 @@ function FormularioRascunho({
         id="nivel"
         value={rascunho.nivel}
         onChange={(e) => atualizarTexto('nivel', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="duracao">Duração</label>
@@ -145,6 +121,7 @@ function FormularioRascunho({
         id="duracao"
         value={rascunho.duracao}
         onChange={(e) => atualizarTexto('duracao', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="tema">Tema</label>
@@ -152,6 +129,7 @@ function FormularioRascunho({
         id="tema"
         value={rascunho.tema}
         onChange={(e) => atualizarTexto('tema', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="objetivos">Objetivos (um por linha)</label>
@@ -160,6 +138,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.objetivos.join('\n')}
         onChange={(e) => atualizarLista('objetivos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="conteudos">Conteúdos (um por linha)</label>
@@ -168,6 +147,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.conteudos.join('\n')}
         onChange={(e) => atualizarLista('conteudos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="metodologia">Metodologia</label>
@@ -176,6 +156,7 @@ function FormularioRascunho({
         rows={2}
         value={rascunho.metodologia}
         onChange={(e) => atualizarTexto('metodologia', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="recursos">Recursos (um por linha)</label>
@@ -184,6 +165,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.recursos.join('\n')}
         onChange={(e) => atualizarLista('recursos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="avaliacao">Avaliação</label>
@@ -192,6 +174,7 @@ function FormularioRascunho({
         rows={2}
         value={rascunho.avaliacao}
         onChange={(e) => atualizarTexto('avaliacao', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="orientacoes">
@@ -203,23 +186,40 @@ function FormularioRascunho({
         value={orientacoes}
         placeholder="Ex.: Deixe a metodologia mais ativa e inclua uma atividade em grupo."
         onChange={(e) => setOrientacoes(e.target.value)}
+        disabled={carregando}
       />
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && <p className="erro-mensagem" role="alert">{erro}</p>}
 
-      {/*
-        Dois botões:
-        - "Melhorar plano" (type="button"): pede à IA um novo rascunho com base
-          nas orientações, permanecendo nesta tela de revisão;
-        - "Gerar versão final" (type="submit"): avança para o relatório final.
-      */}
       <div className="acoes">
-        <button type="button" onClick={aoMelhorar} disabled={carregando}>
-          {carregando ? 'Processando...' : 'Melhorar plano'}
+        <button
+          type="button"
+          onClick={aoMelhorar}
+          disabled={!orientacoesValidas || carregando}
+        >
+          {carregando ? (
+            <>
+              <span className="spinner"></span>
+              Processando...
+            </>
+          ) : (
+            'Melhorar plano'
+          )}
         </button>
 
-        <button type="submit" disabled={carregando}>
-          {carregando ? 'Processando...' : 'Gerar versão final'}
+        <button
+          type="submit"
+          className="btn-principal"
+          disabled={carregando}
+        >
+          {carregando ? (
+            <>
+              <span className="spinner"></span>
+              Processando...
+            </>
+          ) : (
+            'Gerar versão final'
+          )}
         </button>
       </div>
     </form>

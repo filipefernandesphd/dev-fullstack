@@ -25,3 +25,7 @@ paths:
     $ref: './paths/planos-de-aula/melhorar-rascunho.yaml'
   /planos-de-aula/final:
     $ref: './paths/planos-de-aula/gerar-plano-final.yaml'
+  /planos-de-aula:
+    $ref: './paths/planos-de-aula/listar-planos.yaml'
+  /planos-de-aula/{id}:
+    $ref: './paths/planos-de-aula/buscar-plano.yaml'
