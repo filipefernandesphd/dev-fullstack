@@ -11,11 +11,24 @@ on:
 
 env:
     NODE_VERSION: 22
+    MONGO_URL: mongodb://mongodb:27017/meuplanodev
 
 jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+        
+        services:
+            mongodb:
+                image: mongo:6
+                ports:
+                    - 27017:27017
+                options: >-
+                    --health-cmd="mongosh --eval \"db.runCommand('ping')\""
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
@@ -27,18 +40,16 @@ jobs:
                 cache: npm
                 cache-dependency-path: ./backend/package-lock.json
 
-            - name: Instalar as depenências
+            - name: Instalar as dependências
               working-directory: ./backend
               run: npm ci
 
             - name: Rodar os testes
               working-directory: ./backend
               run: npm run test
+              env:
+                MONGO_URL: ${{env.MONGO_URL}}
 
             - name: Rodar build
               working-directory: ./backend
               run: npm run build
-        
-
-
-    
