@@ -1,4 +1,5 @@
 import { IaServico } from "../ia/ia.servico";
+import { PlanoDeAulaRepositorio } from "./plano-de-aula.repositorio";
 
 import {
     criarPromptGerarPlanoFinal,
@@ -56,13 +57,13 @@ class PlanoDeAulaServico {
     private readonly iaServico: IaServico;
 
     /**
-     * Cria uma nova instância do serviço de plano de aula.
-     *
-     * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
-     * diretamente de process.env.
+     * Repositório para isolamento da persistência de dados.
      */
+    private readonly planoDeAulaRepositorio: PlanoDeAulaRepositorio;
+
     constructor() {
         this.iaServico = new IaServico();
+        this.planoDeAulaRepositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -152,6 +153,8 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        await this.planoDeAulaRepositorio.salvar(planoFinal);
 
         return planoFinal;
     }
