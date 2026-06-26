@@ -47,6 +47,18 @@ type RespostaIa = {
  * - LiteLLM;
  * - Ollama usando /v1/chat/completions.
  */
+/**
+ * Tempo máximo (em milissegundos) que esperamos por uma resposta do provedor
+ * de IA antes de abortar a requisição.
+ *
+ * Provedores gratuitos (como o Gemini free tier) podem
+ * demorar ou simplesmente travar sob carga. Sem um limite explícito, a
+ * requisição do professor ficaria pendurada indefinidamente. Com o timeout,
+ * pode-se abortar e devolver uma mensagem clara, mantendo o formato
+ * padrão da API.
+ */
+const TEMPO_LIMITE_IA_MS = 30_000;
+
 class IaServico {
     private readonly apiUrl: string;
     private readonly apiKey: string;
@@ -96,27 +108,87 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
+        /**
+         * AbortController permite cancelar a requisição caso o provedor demore
+         * mais que o tempo limite. Agendado o aborto com setTimeout e o
+         * cancelamento no bloco finally (se a resposta chegar a tempo).
+         */
+        const controlador = new AbortController();
+        const temporizador = setTimeout(
+            () => controlador.abort(),
+            TEMPO_LIMITE_IA_MS,
+        );
 
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
+        let resposta: Response;
+
+        try {
+            resposta = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    /**
+                     * Informa que é enviado JSON no corpo da requisição.
+                     */
+                    'Content-Type': 'application/json',
+
+                    /**
+                     * Envia a chave no formato Bearer Token.
+                     *
+                     * Mesmo quando usa Ollama local com chave fictícia,
+                     * manter esse cabeçalho simula uma API real.
+                     */
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(corpoRequisicao),
+                signal: controlador.signal,
+            });
+        } catch (erro) {
+            /**
+             * Aqui ocorrem dois cenários distintos:
+             *
+             * 1. O AbortController disparou (timeout): o fetch lança um erro
+             *    cujo "name" é "AbortError".
+             * 2. Falha de rede (DNS, sem conexão, provedor fora do ar): o fetch
+             *    lança um TypeError.
+             *
+             * Em ambos devolvemos uma mensagem amigável, sem vazar detalhes
+             * técnicos para o professor.
+             */
+            if (erro instanceof Error && erro.name === 'AbortError') {
+                throw new Error(
+                    'Tempo de resposta da IA excedido (timeout). Tente novamente.',
+                );
+            }
+
+            throw new Error(
+                'Não foi possível conectar ao serviço de IA. Verifique a conexão e a URL configurada (AI_API_URL).',
+            );
+        } finally {
+            /**
+             * Sempre limpa-se o temporizador para não deixar um setTimeout
+             * pendurado após a requisição terminar (evita vazamento de timer).
+             */
+            clearTimeout(temporizador);
+        }
 
         if (!resposta.ok) {
             const corpoErro = await resposta.text();
+
+            /**
+             * Tradução dos códigos de status mais comuns do provedor em
+             * mensagens claras. Manter o erro como Error: o controlador o
+             * captura e devolve no formato padrão { sucesso, mensagem, dados }.
+             */
+            if (resposta.status === 429) {
+                throw new Error(
+                    'Limite de uso da IA atingido (429). Aguarde alguns instantes e tente novamente.',
+                );
+            }
+
+            if (resposta.status === 401 || resposta.status === 403) {
+                throw new Error(
+                    'Chave de API inválida ou sem permissão (verifique AI_API_KEY).',
+                );
+            }
 
             throw new Error(
                 `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,

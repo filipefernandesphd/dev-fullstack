@@ -205,21 +205,41 @@ function FormularioRascunho({
         onChange={(e) => setOrientacoes(e.target.value)}
       />
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && (
+        <p role="alert" className="banner-erro">
+          <span aria-hidden="true">⚠️</span> {erro}
+        </p>
+      )}
 
       {/*
         Dois botões:
         - "Melhorar plano" (type="button"): pede à IA um novo rascunho com base
-          nas orientações, permanecendo nesta tela de revisão;
+          nas orientações, permanece nesta tela de revisão;
         - "Gerar versão final" (type="submit"): avança para o relatório final.
+
+        Manter EXATAMENTE os rótulos no estado normal (os testes dependem
+        deles). O spinner é decorativo (aria-hidden) e não altera o nome
+        acessível dos botões.
       */}
       <div className="acoes">
         <button type="button" onClick={aoMelhorar} disabled={carregando}>
-          {carregando ? 'Processando...' : 'Melhorar plano'}
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true" /> Processando...
+            </>
+          ) : (
+            'Melhorar plano'
+          )}
         </button>
 
         <button type="submit" disabled={carregando}>
-          {carregando ? 'Processando...' : 'Gerar versão final'}
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true" /> Processando...
+            </>
+          ) : (
+            'Gerar versão final'
+          )}
         </button>
       </div>
     </form>

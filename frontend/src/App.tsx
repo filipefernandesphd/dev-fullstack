@@ -24,6 +24,12 @@ import FormularioEntrada from './modulos/planos-de-aula/componentes/FormularioEn
 import FormularioRascunho from './modulos/planos-de-aula/componentes/FormularioRascunho';
 import VisualizacaoRelatorio from './modulos/planos-de-aula/componentes/VisualizacaoRelatorio';
 
+// Indicador visual das etapas (Entrada -> Revisão -> Relatório).
+import IndicadorEtapas from './modulos/planos-de-aula/componentes/IndicadorEtapas';
+
+// Botão de alternância entre tema claro e escuro.
+import AlternadorTema from './componentes/AlternadorTema';
+
 /**
  * Etapas possíveis do fluxo principal.
  */
@@ -128,7 +134,12 @@ function App() {
 
   return (
     <main className="app">
+      <AlternadorTema />
+
       <h1>MeuPlano.AI</h1>
+
+      {/* Indicador de progresso entre as etapas do fluxo. */}
+      <IndicadorEtapas etapaAtual={etapa} />
 
       {/* Etapa 1: entrada em linguagem natural */}
       {etapa === 'entrada' && (

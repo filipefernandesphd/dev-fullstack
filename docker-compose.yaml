@@ -1,6 +1,19 @@
 name: meuplanoai
 
 services:
+  # Banco de dados MongoDB (desenvolvimento).
+  #
+  # Em produção usamos o MongoDB Atlas (cluster free M0); aqui, um container
+  # local equivalente. O backend se conecta via MONGO_URL=mongodb://mongodb:27017/meuplanoai
+  # (o host "mongodb" é o nome deste serviço dentro da rede do Compose).
+  mongodb:
+    container_name: mongodb
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   backend-dev:
     container_name: backend-dev
     build:
@@ -14,6 +27,14 @@ services:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     env_file:
       - ./backend/.env.development
+    environment:
+      # Dentro da rede do Compose, o backend alcança o banco pelo nome do
+      # serviço "mongodb". Definido aqui (e não no .env.development) para que
+      # `npm test` no host continue rodando sem MongoDB.
+      - MONGO_URL=mongodb://mongodb:27017/meuplanoai
+    # Garante que o banco suba antes do backend.
+    depends_on:
+      - mongodb
 
   backend-test:
     container_name: backend-test
@@ -56,7 +77,8 @@ services:
       dockerfile: Dockerfile
       target: test
     env_file:
-      - ./frontend/.env.development           # injeta variaveis dentro do ambiente
+      - ./frontend/.env.development           # injeta variáveis dentro do ambiente
 
 volumes:
-  ollama_data: 
+  ollama_data:
+  mongo_data:

@@ -6,6 +6,8 @@ import {
     criarPromptMelhorarRascunho,
 } from "./plano-de-aula.prompts";
 
+import { PlanoDeAulaRepositorio } from "./plano-de-aula.repositorio";
+
 import { PlanoDeAulaRascunho } from "./plano-de-aula.tipos";
 
 /**
@@ -56,6 +58,14 @@ class PlanoDeAulaServico {
     private readonly iaServico: IaServico;
 
     /**
+     * Repositório responsável por persistir planos de aula no MongoDB.
+     *
+     * O serviço conhece o repositório (regra de aplicação), mas o repositório
+     * não conhece o serviço: a dependência aponta em uma única direção.
+     */
+    private readonly repositorio: PlanoDeAulaRepositorio;
+
+    /**
      * Cria uma nova instância do serviço de plano de aula.
      *
      * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
@@ -63,6 +73,7 @@ class PlanoDeAulaServico {
      */
     constructor() {
         this.iaServico = new IaServico();
+        this.repositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -152,6 +163,21 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        /**
+         * Persistir o plano final APENAS DEPOIS de a IA gerar e validar com
+         * sucesso. Isso é proposital:
+         *
+         * - preserva o caminho de erro (se a IA falhar, lançamos antes daqui e
+         *   nada é gravado);
+         * - a gravação é não-fatal e guardada por MONGO_URL (ver repositório),
+         *   então não derruba a requisição nem quebra os testes.
+         *
+         * Importante: devolvemos `planoFinal` (o objeto vindo da IA), e NUNCA o
+         * documento do Mongoose. Assim o contrato da resposta de /final
+         * permanece exatamente { titulo, plano, relatorio }.
+         */
+        await this.repositorio.salvarPlanoFinal(planoFinal);
 
         return planoFinal;
     }

@@ -16,6 +16,24 @@ jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+        # Serviço de banco de dados disponível durante o job.
+        #
+        # O GitHub Actions sobe este container ao lado do runner e o expõe em
+        # localhost:27017. O health-check garante que o serviço só comece a rodar os
+        # quando o Mongo já estiver pronto (evita falhas de conexão por
+        # corrida de inicialização).
+        services:
+            mongo:
+                image: mongo:7
+                ports:
+                    - 27017:27017
+                options: >-
+                    --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
@@ -27,12 +45,18 @@ jobs:
                 cache: npm
                 cache-dependency-path: ./backend/package-lock.json
 
-            - name: Instalar as depenências
+            - name: Instalar as dependências
               working-directory: ./backend
               run: npm ci
 
             - name: Rodar os testes
               working-directory: ./backend
+              # MONGO_URL apontando para o serviço mongo do CI, de
+              # modo que o caminho de persistência seja exercitado de verdade.
+              # Como a persistência é não-fatal, o CI permanece verde mesmo que
+              # ocorra qualquer instabilidade no banco.
+              env:
+                MONGO_URL: mongodb://localhost:27017/meuplanoai
               run: npm run test
 
             - name: Rodar build
@@ -41,4 +65,3 @@ jobs:
         
 
 
-    

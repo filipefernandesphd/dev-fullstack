@@ -2,9 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>MeuPlano.AI</title>
+    <!--
+      Aplica o tema (claro/escuro) antes da pintura para evitar o "flash" de
+      tema errado: usa a escolha salva e, na ausência, a preferência do SO.
+    -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('tema');
+          if (t !== 'claro' && t !== 'escuro') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'escuro'
+              : 'claro';
+          }
+          document.documentElement.dataset.tema = t;
+        } catch (e) {
+          /* ignora ambientes sem localStorage/matchMedia - não tem o que fazer */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
