@@ -32,20 +32,6 @@ type RespostaIa = {
  * Serviço responsável pela comunicação com o provedor de Inteligência Artificial.
  *
  * Este serviço é genérico. Ele não conhece regras específicas de plano de aula.
- *
- * Responsabilidades:
- *
- * - ler AI_API_KEY, AI_MODEL e AI_API_URL a partir de process.env;
- * - enviar prompts para uma API compatível com Chat Completions;
- * - retornar texto gerado pela IA;
- * - converter respostas textuais em JSON quando necessário.
- *
- * Exemplos de provedores compatíveis:
- *
- * - OpenAI;
- * - OpenRouter;
- * - LiteLLM;
- * - Ollama usando /v1/chat/completions.
  */
 class IaServico {
     private readonly apiUrl: string;
@@ -71,14 +57,12 @@ class IaServico {
     }
 
     /**
-    * Envia um prompt para o provedor de IA e retorna o texto gerado.
-    *
-    * @param prompt Prompt textual enviado para a IA.
-    * @returns Texto retornado pela IA.
-    *
-    * @throws Error Caso a API de IA retorne erro HTTP.
-    * @throws Error Caso a resposta da IA venha vazia ou em formato inesperado.
-    */
+     * Envia um prompt para o provedor de IA e retorna o texto gerado.
+     *
+     * O Gemini oferece endpoint compatível com Chat Completions. Por isso,
+     * este serviço continua genérico e depende apenas das variáveis:
+     * AI_API_URL, AI_MODEL e AI_API_KEY.
+     */
     async gerarTexto(prompt: string): Promise<string> {
         const corpoRequisicao: RequisicaoIa = {
             model: this.modelo,
@@ -87,7 +71,7 @@ class IaServico {
                 {
                     role: 'system',
                     content:
-                        'Você é um assistente pedagógico especializado em planejamento de uma única aula.',
+                        'Você é um assistente pedagógico especializado em planejamento de uma única aula. Responda sempre em português do Brasil.',
                 },
                 {
                     role: 'user',
@@ -96,60 +80,84 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
+        const controladorAbort = new AbortController();
 
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
+        const temporizadorTimeout = setTimeout(() => {
+            controladorAbort.abort();
+        }, 30000);
 
-        if (!resposta.ok) {
-            const corpoErro = await resposta.text();
+        try {
+            const resposta = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(corpoRequisicao),
+                signal: controladorAbort.signal,
+            });
 
+            if (!resposta.ok) {
+                await this.tratarErroHttp(resposta);
+            }
+
+            const corpo = (await resposta.json()) as RespostaIa;
+
+            const conteudo = corpo.choices?.[0]?.message?.content;
+
+            if (!conteudo || typeof conteudo !== 'string') {
+                throw new Error('Resposta da IA veio vazia ou em formato inválido.');
+            }
+
+            return conteudo;
+        } catch (erro) {
+            if (erro instanceof Error && erro.name === 'AbortError') {
+                throw new Error(
+                    'O serviço de IA demorou demais para responder. Tente novamente em instantes.',
+                );
+            }
+
+            throw erro;
+        } finally {
+            clearTimeout(temporizadorTimeout);
+        }
+    }
+
+    /**
+     * Trata erros HTTP retornados pelo provedor de IA com mensagens didáticas.
+     *
+     * A API externa pode falhar por limite de uso, chave inválida, indisponibilidade
+     * temporária ou erro de validação. Aqui traduzimos esses casos para mensagens
+     * claras sem vazar segredos ou detalhes sensíveis da requisição.
+     */
+    private async tratarErroHttp(resposta: Response): Promise<never> {
+        const corpoErro = await resposta.text();
+
+        if (resposta.status === 401 || resposta.status === 403) {
             throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
+                'Não foi possível autenticar no serviço de IA. Verifique se a chave AI_API_KEY está correta.',
             );
         }
 
-        const corpo = (await resposta.json()) as RespostaIa;
-
-        const conteudo = corpo.choices?.[0]?.message?.content;
-
-        if (!conteudo || typeof conteudo !== 'string') {
-            throw new Error('Resposta da IA veio vazia ou em formato inválido.');
+        if (resposta.status === 429) {
+            throw new Error(
+                'O limite de uso do serviço de IA foi atingido. Aguarde alguns minutos e tente novamente.',
+            );
         }
 
-        return conteudo;
-    };
+        if (resposta.status >= 500) {
+            throw new Error(
+                'O serviço de IA está temporariamente indisponível. Tente novamente mais tarde.',
+            );
+        }
+
+        throw new Error(
+            `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
+        );
+    }
 
     /**
      * Envia um prompt para a IA esperando receber um JSON válido.
-     *
-     * Este método:
-     *
-     * 1. chama gerarTexto(prompt);
-     * 2. limpa possíveis marcações de Markdown;
-     * 3. converte o texto para JSON;
-     * 4. retorna o objeto tipado.
-     *
-     * @param prompt Prompt textual enviado para a IA.
-     * @returns Objeto convertido para o tipo esperado.
-     *
-     * @template T Tipo esperado para o JSON retornado.
-     *
-     * @throws Error Caso a IA não retorne um JSON válido.
      */
     async gerarJson<T>(prompt: string): Promise<T> {
         const textoGerado = await this.gerarTexto(prompt);
@@ -167,17 +175,6 @@ class IaServico {
 
     /**
      * Remove marcações comuns que modelos de IA podem adicionar ao redor do JSON.
-     *
-     * Alguns modelos, especialmente locais, podem responder assim:
-     *
-     * ```json
-     * { "titulo": "Plano de Aula" }
-     * ```
-     *
-     * Este método remove essas marcações para permitir o uso de JSON.parse.
-     *
-     * @param texto Texto bruto retornado pela IA.
-     * @returns Texto limpo para conversão JSON.
      */
     private limparRespostaJson(texto: string): string {
         return texto

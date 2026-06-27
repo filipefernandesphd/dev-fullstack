@@ -4,7 +4,7 @@ on:
     push:
         branches:
             - "*"
-    
+
     pull_request:
         branches:
             - "*"
@@ -16,6 +16,18 @@ jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+        services:
+            mongodb:
+                image: mongo:7
+                ports:
+                    - 27017:27017
+                options: >-
+                    --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
@@ -23,22 +35,20 @@ jobs:
             - name: Configurar Node.js
               uses: actions/setup-node@v4
               with:
-                node-version: ${{env.NODE_VERSION}}
-                cache: npm
-                cache-dependency-path: ./backend/package-lock.json
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+                  cache-dependency-path: ./backend/package-lock.json
 
-            - name: Instalar as depenências
+            - name: Instalar as dependências
               working-directory: ./backend
               run: npm ci
 
             - name: Rodar os testes
               working-directory: ./backend
               run: npm run test
+              env:
+                  MONGO_URL: mongodb://localhost:27017/meuplanoai
 
             - name: Rodar build
               working-directory: ./backend
               run: npm run build
-        
-
-
-    
