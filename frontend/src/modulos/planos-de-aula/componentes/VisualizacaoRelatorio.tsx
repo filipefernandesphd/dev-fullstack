@@ -139,7 +139,6 @@ ${planoFinal.relatorio}
 
       {/* Container de Ações */}
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-        {/* TEXTO IMUTÁVEL: 'Novo plano' mantido para passar nos testes E2E/Integração */}
         <button 
           type="button" 
           onClick={onReiniciar}
