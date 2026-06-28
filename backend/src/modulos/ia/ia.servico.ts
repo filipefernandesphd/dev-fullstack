@@ -51,6 +51,12 @@ class IaServico {
     private readonly apiUrl: string;
     private readonly apiKey: string;
     private readonly modelo: string;
+    
+    /**
+     * Tempo limite em milissegundos para aguardar a resposta do provedor de IA.
+     * Define um teto de 30 segundos para evitar requisições infinitas ou travadas.
+     */
+    private readonly TEMPO_LIMITE_MS = 30000; 
 
     constructor() {
         this.apiUrl = process.env.AI_API_URL || '';
@@ -96,43 +102,93 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
+        try {
+            const resposta = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    /**
+                     * Informa que estamos enviando JSON no corpo da requisição.
+                     */
+                    'Content-Type': 'application/json',
+
+                    /**
+                     * Envia a chave no formato Bearer Token.
+                     *
+                     * Mesmo quando usamos Ollama local com chave fictícia,
+                     * manter esse cabeçalho simula uma API real.
+                     */
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(corpoRequisicao),
                 /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
+                 * Mecanismo de resiliência: aborta o fetch caso o provedor ultrapasse
+                 * o limite estipulado em TIMEOUT_MS, liberando recursos do backend.
                  */
-                'Content-Type': 'application/json',
+                signal: AbortSignal.timeout(this.TEMPO_LIMITE_MS)
+            });
 
+            if (!resposta.ok) {
                 /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
+                 * Delega o tratamento de respostas sem sucesso para uma função especializada,
+                 * mapeando os códigos HTTP em exceções com mensagens claras e sem expor segredos.
                  */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
+                await this.tratarErroHttp(resposta);
+            }
 
-        if (!resposta.ok) {
-            const corpoErro = await resposta.text();
+            const corpo = (await resposta.json()) as RespostaIa;
 
-            throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
-            );
+            const conteudo = corpo.choices?.[0]?.message?.content;
+
+            if (!conteudo || typeof conteudo !== 'string') {
+                throw new Error('Resposta da IA veio vazia ou em formato inválido.');
+            }
+
+            return conteudo;
+        } catch (erro: any) {
+            /**
+             * Captura especificamente o erro lançado pelo sinalizador de timeout do Fetch.
+             * Isso provê um feedback direto sobre problemas de lentidão na rede ou no modelo.
+             */
+            if (erro.name === 'TimeoutError') {
+                throw new Error(`O provedor de IA demorou muito para responder (Limite de ${this.TEMPO_LIMITE_MS / 1000}s atingido). Tente novamente.`);
+            }
+            // Repassa os outros erros de rede ou os erros customizados lançados pelo tratarErroHttp
+            throw erro;
         }
-
-        const corpo = (await resposta.json()) as RespostaIa;
-
-        const conteudo = corpo.choices?.[0]?.message?.content;
-
-        if (!conteudo || typeof conteudo !== 'string') {
-            throw new Error('Resposta da IA veio vazia ou em formato inválido.');
-        }
-
-        return conteudo;
     };
+
+    /**
+     * Analisa o status HTTP de uma resposta mal sucedida e lança um erro customizado e didático.
+     *
+     * Isola o tratamento de exceções de rede e infraestrutura do provedor, traduzindo códigos técnicos
+                     * como 401, 429 e 5xx em instruções acionáveis para o desenvolvedor ou usuário.
+     *
+     * @param resposta Objeto de resposta do Fetch contendo o status de erro.
+     * @returns Nunca retorna um valor, pois sempre dispara uma exceção.
+     *
+     * @throws Error Exceção correspondente ao código HTTP capturado.
+     */
+    private async tratarErroHttp(resposta: Response): Promise<never> {
+        let detalhesErro = '';
+        try {
+            detalhesErro = await resposta.text();
+        } catch {
+            detalhesErro = 'Não foi possível ler os detalhes do erro.';
+        }
+
+        switch (resposta.status) {
+            case 401:
+                throw new Error(`Falha de Autenticação (401): A chave de API (AI_API_KEY) fornecida é inválida ou expirou.`);
+            case 429:
+                throw new Error(`Limite Atingido (429): Muitas requisições enviadas em curto período ou créditos esgotados no provedor.`);
+            case 500:
+            case 502:
+            case 503:
+                throw new Error(`Erro no Provedor (Anomalia ${resposta.status}): O serviço de IA está instável ou fora do ar no momento.`);
+            default:
+                throw new Error(`Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${detalhesErro}`);
+        }
+    }
 
     /**
      * Envia um prompt para a IA esperando receber um JSON válido.
