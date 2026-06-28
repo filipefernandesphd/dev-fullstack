@@ -5,6 +5,8 @@
 
 import { useState } from 'react';
 
+import { LuClipboard, LuCheck, LuPrinter, LuArrowLeft, LuPlus } from 'react-icons/lu';
+
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
@@ -131,19 +133,27 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar, onVoltar }: Props) {
 
       <div className="acoes-relatorio">
         <button type="button" className="secondary" onClick={aoCopiar}>
-          {copiado ? '✅ Copiado!' : '📋 Copiar relatório'}
+          {copiado ? (
+            <>
+              <LuCheck aria-hidden="true" /> Copiado!
+            </>
+          ) : (
+            <>
+              <LuClipboard aria-hidden="true" /> Copiar relatório
+            </>
+          )}
         </button>
 
         <button type="button" className="secondary" onClick={aoImprimir}>
-          🖨️ Imprimir
+          <LuPrinter aria-hidden="true" /> Imprimir
         </button>
 
         <button type="button" className="ghost" onClick={onVoltar}>
-          ← Voltar
+          <LuArrowLeft aria-hidden="true" /> Voltar
         </button>
 
         <button type="button" onClick={onReiniciar}>
-          Novo plano
+          <><LuPlus aria-hidden="true" /> Novo plano</>
         </button>
       </div>
 

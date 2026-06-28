@@ -6,6 +6,8 @@
 
 import { useState, type FormEvent } from 'react';
 
+import { LuTriangleAlert, LuArrowLeft, LuRefreshCw, LuFileCheck } from 'react-icons/lu';
+
 import type { PlanoDeAulaRascunho } from '../plano-de-aula.tipos';
 
 /**
@@ -226,6 +228,7 @@ function FormularioRascunho({
 
       {erro && (
         <p role="alert" className="erro-banner">
+          <LuTriangleAlert aria-hidden="true" />
           {erro}
         </p>
       )}
@@ -238,7 +241,7 @@ function FormularioRascunho({
       */}
       <div className="acoes">
         <button type="button" className="ghost" onClick={onVoltar}>
-          ← Voltar
+          <LuArrowLeft aria-hidden="true" /> Voltar
         </button>
 
         <button
@@ -252,7 +255,7 @@ function FormularioRascunho({
               Processando...
             </>
           ) : (
-            'Melhorar plano'
+            <><LuRefreshCw aria-hidden="true" /> Melhorar plano</>
           )}
         </button>
 
@@ -263,7 +266,7 @@ function FormularioRascunho({
               Processando...
             </>
           ) : (
-            'Gerar versão final'
+            <><LuFileCheck aria-hidden="true" /> Gerar versão final</>
           )}
         </button>
       </div>

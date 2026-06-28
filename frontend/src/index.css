@@ -299,10 +299,9 @@ body {
   gap: 0.5rem;
 }
 
-.app .erro-banner::before {
-  content: '⚠️';
-  font-size: 1.1rem;
+.app .erro-banner svg {
   flex-shrink: 0;
+  font-size: 1.1rem;
 }
 
 /* Contador de caracteres */

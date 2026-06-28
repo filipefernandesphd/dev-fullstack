@@ -5,6 +5,8 @@
 
 import { useState, type FormEvent } from 'react';
 
+import { LuTriangleAlert, LuSparkles } from 'react-icons/lu';
+
 /**
  * Propriedades do componente de entrada.
  */
@@ -90,6 +92,7 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
       {/* Exibe a mensagem de erro retornada pela API, se houver. */}
       {erro && (
         <p role="alert" className="erro-banner">
+          <LuTriangleAlert aria-hidden="true" />
           {erro}
         </p>
       )}
@@ -101,7 +104,7 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
             Gerando...
           </>
         ) : (
-          'Gerar plano'
+          <><LuSparkles aria-hidden="true" /> Gerar plano</>
         )}
       </button>
     </form>

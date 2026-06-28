@@ -61,6 +61,75 @@ A aplicação está hospedada nos seguintes serviços:
 | **Backend (Render)** | `https://COLOQUE_AQUI_O_URL_DO_RENDER` |
 | **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
 
+## Deploy
+
+A aplicação está hospedada nos seguintes serviços:
+
+| Serviço | URL |
+|---|---|
+| **Frontend (Vercel)** | `https://COLOQUE_AQUI_O_URL_DO_VERCEL` |
+| **Backend (Render)** | `https://COLOQUE_AQUI_O_URL_DO_RENDER` |
+| **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
+
+> ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
+
+### Passo a passo do deploy
+
+#### 1. MongoDB Atlas (banco de dados)
+
+1. Acesse [mongodb.com/atlas](https://www.mongodb.com/atlas) e crie uma conta.
+2. Crie um cluster **M0** (gratuito).
+3. Em **Database Access**, crie um usuário com senha.
+4. Em **Network Access**, adicione `0.0.0.0/0` (acesso de qualquer IP).
+5. Em **Clusters → Connect → Drivers → Node.js**, copie a **connection string**.
+6. A string terá o formato:
+   ```
+   mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/meuplanoai?retryWrites=true&w=majority
+   ```
+
+#### 2. Render (backend)
+
+1. Acesse [render.com](https://render.com) e conecte sua conta GitHub.
+2. Crie um novo **Web Service**.
+3. Selecione o repositório e defina:
+   - **Root Directory:** `backend`
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+4. Em **Environment Variables**, adicione:
+   | Variável | Valor |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `PORT` | `10000` (Render ignora e usa a própria) |
+   | `AI_API_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` |
+   | `AI_MODEL` | `gemini-2.5-flash` |
+   | `AI_API_KEY` | `<sua_chave_do_google_ai_studio>` |
+   | `MONGO_URL` | `<connection_string_do_atlas>` |
+   | `CORS_ORIGIN` | `https://<seu_dominio>.vercel.app` |
+5. Clique em **Create Web Service**.
+6. Aguarde o deploy e copie a URL pública (ex: `https://meuplanoai-api.onrender.com`).
+
+> ⚠️ **Importante:** se faltar qualquer variável `AI_*`, o backend **quebra ao iniciar**.
+
+#### 3. Vercel (frontend)
+
+1. Acesse [vercel.com](https://vercel.com) e importe o repositório.
+2. Selecione o diretório `frontend`.
+3. Em **Environment Variables**, adicione:
+   | Variável | Valor |
+   |---|---|
+   | `VITE_API_URL` | `https://<url_do_render>` |
+4. Clique em **Deploy**.
+5. Aguarde o build e copie a URL do domínio.
+
+#### 4. Ajustar CORS
+
+1. Volte ao Render e atualize a variável `CORS_ORIGIN` com o domínio final do Vercel.
+2. Faça **Manual Deploy** no Render para aplicar a mudança.
+
+#### 5. Atualizar README
+
+Substitua os placeholders no topo desta seção pelas URLs reais do Vercel e Render.
 > ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
 
 ## Tecnologias

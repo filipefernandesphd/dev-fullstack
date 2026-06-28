@@ -10,6 +10,8 @@
 
 import { useState, useEffect } from 'react';
 
+import { LuMoon, LuSun } from 'react-icons/lu';
+
 // Instância pronta do cliente HTTP (camada de serviço).
 import { planoDeAulaServico } from './modulos/planos-de-aula/plano-de-aula.servico';
 
@@ -191,7 +193,7 @@ function App() {
           onClick={alternarTema}
           title={`Alternar para tema ${tema === 'light' ? 'escuro' : 'claro'}`}
         >
-          {tema === 'light' ? '🌙' : '☀️'}
+          {tema === 'light' ? <LuMoon /> : <LuSun />}
         </button>
       </header>
 
