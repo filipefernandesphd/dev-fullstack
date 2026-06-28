@@ -1,7 +1,7 @@
 # MeuPlano.AI
 
 Professores gastam muito tempo criando planos de aula claros, organizados e adaptados a diferentes turmas.
-
+🌐 **Acesse o site:** [https://seu-projeto.onrender.com](https://seu-projeto.onrender.com
 O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturadas de planos de aula, permitindo que o professor revise, edite e salve seus planejamentos com mais rapidez.
 
 > Este projeto é exclusivo para fins didáticos para a disciplina de **Desenvolvimento Full Stack** do curso de Especialização em Desenvolvimento Full Stack do IF Sudeste MG - *Campus* Manhuaçu, ofertado pelo [Prof. Dr. Filipe Fernandes](filipefernandesphd.com).
