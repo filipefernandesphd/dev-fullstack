@@ -1,5 +1,7 @@
 import { IaServico } from "../ia/ia.servico";
 
+import { conectarMongo } from "../../config/mongo";
+
 import {
     criarPromptGerarPlanoFinal,
     criarPromptGerarRascunho,
@@ -7,6 +9,8 @@ import {
 } from "./plano-de-aula.prompts";
 
 import { PlanoDeAulaRascunho } from "./plano-de-aula.tipos";
+
+import { salvarPlanoFinal } from "./plano-de-aula.repositorio";
 
 /**
  * Representa a resposta esperada da IA ao gerar a versão final
@@ -134,6 +138,15 @@ class PlanoDeAulaServico {
      * Por isso, este método usa gerarJson<PlanoDeAulaFinal>(),
      * e não gerarTexto().
      *
+     * Após gerar e validar o plano com sucesso, tenta persistir o resultado
+     * no MongoDB. A persistência só ocorre se a variável MONGO_URL estiver
+     * configurada; caso contrário, o método segue normalmente.
+     *
+     * A persistência é **não-fatal**: se o banco estiver indisponível,
+     * o método apenas registra o erro e continua retornando o plano gerado pela IA.
+     * Dessa forma, a ausência de MONGO_URL (como nos testes automatizados)
+     * não quebra o fluxo nem altera o contrato de resposta.
+     *
      * @param rascunhoRevisado Rascunho revisado pelo professor.
      * @returns Plano de aula final com dados estruturados e relatório textual.
      *
@@ -152,6 +165,20 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        if (process.env.MONGO_URL && process.env.MONGO_URL.trim().length > 0) {
+            try {
+                await conectarMongo();
+                await salvarPlanoFinal(planoFinal);
+            } catch (erro: unknown) {
+                const mensagem =
+                    erro instanceof Error
+                        ? erro.message
+                        : 'Erro desconhecido ao persistir o plano de aula.';
+
+                console.error('Falha ao salvar plano final no MongoDB:', mensagem);
+            }
+        }
 
         return planoFinal;
     }
@@ -246,7 +273,6 @@ class PlanoDeAulaServico {
             );
         }
     }
-
 }
 
 export { PlanoDeAulaServico };
