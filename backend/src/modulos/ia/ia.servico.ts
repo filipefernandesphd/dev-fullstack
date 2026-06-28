@@ -151,8 +151,13 @@ class IaServico {
              * Captura especificamente o erro lançado pelo sinalizador de timeout do Fetch.
              * Isso provê um feedback direto sobre problemas de lentidão na rede ou no modelo.
              */
-            if (erro.name === 'TimeoutError') {
-                throw new Error(`O provedor de IA demorou muito para responder (Limite de ${this.TEMPO_LIMITE_MS / 1000}s atingido). Tente novamente.`);
+            if (
+                (erro instanceof DOMException && erro.name === 'AbortError') ||
+                (erro instanceof Error && erro.name === 'TimeoutError')
+            ) {
+                throw new Error(
+                    `O provedor de IA demorou muito para responder (Limite de ${this.TEMPO_LIMITE_MS / 1000}s atingido). Tente novamente.`
+                );
             }
             // Repassa os outros erros de rede ou os erros customizados lançados pelo tratarErroHttp
             throw erro;
