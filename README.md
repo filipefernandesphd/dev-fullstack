@@ -2,7 +2,7 @@
 
 Professores gastam muito tempo criando planos de aula claros, organizados e adaptados a diferentes turmas.
 
-🌐 **Acesse o site frontend:** [https://dev-fullstack-tan.vercel.app](https://dev-fullstack-tan.vercel.app)
+🌐 **Acesse o site frontend:** [https://dev-fullstack-tan.vercel.app](https://dev-fullstack-tan.vercel.app) </BR>
 🌐 **Acesse o site backend:** [https://dev-fullstack-u1gw.onrender.com]([https://dev-fullstack-tan.vercel.app/](https://dev-fullstack-u1gw.onrender.com))
 
 O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturadas de planos de aula, permitindo que o professor revise, edite e salve seus planejamentos com mais rapidez.
