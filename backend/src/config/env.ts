@@ -14,5 +14,5 @@ export const config = {
     port,
     urlApi: process.env.API_URL ?? `http://localhost:${port}`,
     nodeEnv: env,
-    corsOrigin: process.env.CORS_ORIGIN ?? '*',
+    corsOrigin: (process.env.CORS_ORIGIN ?? '*').replace(/^['"]|['"]$/g, ''),
 };
