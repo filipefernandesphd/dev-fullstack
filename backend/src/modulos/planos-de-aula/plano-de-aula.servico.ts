@@ -1,5 +1,7 @@
 import { IaServico } from "../ia/ia.servico";
 
+import { PlanoDeAulaRepositorio } from "./plano-de-aula.repositorio";
+
 import {
     criarPromptGerarPlanoFinal,
     criarPromptGerarRascunho,
@@ -56,6 +58,11 @@ class PlanoDeAulaServico {
     private readonly iaServico: IaServico;
 
     /**
+     * Repositório responsável por persistir o plano final.
+     */
+    private readonly planoDeAulaRepositorio: PlanoDeAulaRepositorio;
+
+    /**
      * Cria uma nova instância do serviço de plano de aula.
      *
      * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
@@ -63,6 +70,7 @@ class PlanoDeAulaServico {
      */
     constructor() {
         this.iaServico = new IaServico();
+        this.planoDeAulaRepositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -152,6 +160,12 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        // A ordem aqui importa: só mandamos salvar depois que a IA respondeu e o
+        // plano passou na validação. Se algo falhar antes, o erro sobe e a rota
+        // devolve 500 - exatamente o que o teste do /final espera no caminho de erro.
+        // O salvar em si é não-fatal (detalhe no repositório), então não atrapalha.
+        await this.planoDeAulaRepositorio.salvar(planoFinal);
 
         return planoFinal;
     }

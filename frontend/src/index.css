@@ -168,3 +168,226 @@ body {
   border-radius: var(--raio);
   padding: 1rem;
 }
+
+/* ----- Melhorias de UX ----- */
+
+.cabecalho {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.subtitulo {
+  margin: 0.25rem 0 0;
+  color: var(--cor-texto-suave);
+}
+
+/* Indicador de etapas (entrada -> revisão -> relatório). */
+.etapas {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.etapa {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--raio);
+  background-color: #fff;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+}
+
+.etapa__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--cor-borda);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.etapa--ativa {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+  font-weight: 600;
+}
+
+.etapa--ativa .etapa__numero,
+.etapa--concluida .etapa__numero {
+  background-color: var(--cor-primaria);
+}
+
+.etapa--concluida {
+  color: var(--cor-texto);
+}
+
+/* Contador de caracteres da descrição. */
+.contador {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+}
+
+.contador--ok {
+  color: #16a34a;
+}
+
+/* Banner de erro mais destacado (sobre o estilo de role="alert"). */
+.alerta {
+  font-weight: 500;
+}
+
+/* Spinner exibido dentro dos botões durante o carregamento. */
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  vertical-align: -0.15rem;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar 0.6s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botão secundário (contorno), para ações alternativas. */
+.app button.botao-secundario {
+  background-color: #fff;
+  color: var(--cor-primaria);
+  border: 1px solid var(--cor-primaria);
+}
+
+.app button.botao-secundario:hover:not(:disabled) {
+  background-color: #eff6ff;
+}
+
+.app button.botao-secundario .spinner {
+  border-color: rgba(37, 99, 235, 0.3);
+  border-top-color: var(--cor-primaria);
+}
+
+.acoes--relatorio {
+  margin-top: 1.5rem;
+}
+
+/* Acessibilidade: quem navega por teclado (Tab) precisa enxergar onde está o foco.
+   O :focus-visible só desenha esse contorno na navegação por teclado, sem aparecer
+   no clique do mouse. Usamos a cor escura da primária pra garantir contraste. */
+.app button:focus-visible,
+.app input:focus-visible,
+.app textarea:focus-visible {
+  outline: 2px solid var(--cor-primaria-escura);
+  outline-offset: 2px;
+}
+
+/* Responsividade: em telas estreitas (celular) o layout lado a lado fica apertado.
+   Aqui a gente reduz o respiro e empilha o indicador de etapas na vertical, e deixa
+   os botões ocuparem a largura toda pra ficarem fáceis de tocar. */
+@media (max-width: 600px) {
+  .app {
+    padding: 1.25rem 0.75rem 3rem;
+  }
+
+  .etapas {
+    flex-direction: column;
+  }
+
+  .acoes button {
+    flex: 1;
+  }
+}
+
+/* Tem gente que configura o sistema pra reduzir animações (questão de conforto ou
+   acessibilidade). Quando esse for o caso, a gente desliga o giro do spinner. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+/* Quando o professor manda imprimir (ou salvar em PDF), a ideia é entregar uma
+   folha limpa, só com o plano - sem botões, sem indicador de etapas e sem os
+   fundos/bordas que servem pra tela mas gastam tinta no papel. */
+@media print {
+  /* Margem da própria folha (não confundir com padding dos elementos). */
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* Esconde tudo que é interação ou enfeite de tela. O grupo de botões precisa do
+     .app .acoes... aqui senão a regra base ".app .acoes { display: flex }" vence
+     por especificidade e os botões acabam saindo na impressão. */
+  .etapas,
+  .cabecalho .subtitulo,
+  .app .acoes.acoes--relatorio {
+    display: none;
+  }
+
+  /* Usa a folha inteira: tira o respiro lateral e o limite de largura da tela. */
+  body {
+    background-color: #fff;
+  }
+
+  .app {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* A marca vira um cabeçalho discreto em preto, em vez do azul grande da tela. */
+  .app > .cabecalho h1 {
+    font-size: 1.1rem;
+    color: #000;
+    text-align: left;
+    margin-bottom: 1rem;
+  }
+
+  /* O cartão do relatório perde borda/sombra/fundo - no papel não fazem sentido. */
+  .app section {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    background-color: transparent;
+  }
+
+  /* No papel os rótulos cinza-claros ficam difíceis de ler, então vão pra preto. */
+  .app .relatorio-dados dt {
+    color: #000;
+  }
+
+  /* O relatório em <pre> não precisa do fundo/caixa cinza na impressão. */
+  .app pre {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  /* Evita que um campo (rótulo + valor) ou um título seja cortado entre páginas. */
+  .app .relatorio-dados dt,
+  .app .relatorio-dados dd,
+  .app h2,
+  .app h3 {
+    break-inside: avoid;
+  }
+
+  .app h2,
+  .app h3 {
+    break-after: avoid;
+  }
+}

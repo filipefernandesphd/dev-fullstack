@@ -3,6 +3,8 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
+
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
@@ -29,6 +31,25 @@ type Props = {
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
   // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+
+  // Guarda se acabamos de copiar pra trocar o texto do botão por "Copiado!" por
+  // alguns segundos. É só um feedback visual rápido, depois volta ao normal.
+  const [copiado, setCopiado] = useState(false);
+
+  async function aoCopiar() {
+    try {
+      // Copia título + relatório de uma vez pra área de transferência.
+      await navigator.clipboard.writeText(
+        `${planoFinal.titulo}\n\n${planoFinal.relatorio}`,
+      );
+      setCopiado(true);
+      // Volta o botão ao texto original depois de 2s.
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // navigator.clipboard pode falhar (sem https ou permissão negada). Como copiar
+      // é um extra, a gente engole o erro em vez de quebrar a tela do relatório.
+    }
+  }
 
   return (
     <section>
@@ -93,9 +114,23 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
       */}
       <pre>{planoFinal.relatorio}</pre>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      <div className="acoes acoes--relatorio">
+        <button type="button" onClick={onReiniciar}>
+          Novo plano
+        </button>
+
+        <button type="button" className="botao-secundario" onClick={aoCopiar}>
+          {copiado ? 'Copiado!' : 'Copiar plano'}
+        </button>
+
+        <button
+          type="button"
+          className="botao-secundario"
+          onClick={() => window.print()}
+        >
+          Imprimir
+        </button>
+      </div>
     </section>
   );
 }

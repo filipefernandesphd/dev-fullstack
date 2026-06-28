@@ -16,6 +16,16 @@ jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+        services:
+            mongo:
+                image: mongo:7
+                ports:
+                    - 27017:27017
+
+        env:
+            MONGO_URL: mongodb://localhost:27017/meuplanoai
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
