@@ -57,8 +57,8 @@ A aplicação está hospedada nos seguintes serviços:
 
 | Serviço | URL |
 |---|---|
-| **Frontend (Vercel)** | `https://COLOQUE_AQUI_O_URL_DO_VERCEL` |
-| **Backend (Render)** | `https://COLOQUE_AQUI_O_URL_DO_RENDER` |
+| **Frontend (Vercel)** | `https://dev-fullstack-red.vercel.app/` |
+| **Backend (Render)** | `https://dev-fullstack-erot.onrender.com` |
 | **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
 
 ## Deploy
@@ -67,8 +67,8 @@ A aplicação está hospedada nos seguintes serviços:
 
 | Serviço | URL |
 |---|---|
-| **Frontend (Vercel)** | `https://COLOQUE_AQUI_O_URL_DO_VERCEL` |
-| **Backend (Render)** | `https://COLOQUE_AQUI_O_URL_DO_RENDER` |
+| **Frontend (Vercel)** | `https://dev-fullstack-red.vercel.app/` |
+| **Backend (Render)** | `https://dev-fullstack-erot.onrender.com` |
 | **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
 
 > ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
@@ -202,7 +202,7 @@ cd frontend && npm test && npm run build
 | `AI_MODEL` | Modelo Gemini | `gemini-2.5-flash` |
 | `AI_API_KEY` | Chave da API Google | `AQ...` |
 | `MONGO_URL` | Connection string MongoDB | `mongodb+srv://...` |
-| `CORS_ORIGIN` | Origem permitida no CORS | `https://meuplanoai.vercel.app` |
+| `CORS_ORIGIN` | Origem permitida no CORS | `https://dev-fullstack-red.vercel.app/` |
 | `PORT` | Porta do servidor | `3333` (Render injeta automaticamente) |
 * 7.2. O professor exporta o plano de aula como PDF e o caso de uso termina.
 
