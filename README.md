@@ -51,6 +51,92 @@ Descrição dos principais fluxos do app **MeuPlano.AI**.
 * 7.1. O professor salva o plano de aula e o caso de uso termina.
 * 7.2. O professor exporta o plano de aula como PDF e o caso de uso termina.
 
+## Deploy
+
+A aplicação está hospedada nos seguintes serviços:
+
+| Serviço | URL |
+|---|---|
+| **Frontend (Vercel)** | `https://COLOQUE_AQUI_O_URL_DO_VERCEL` |
+| **Backend (Render)** | `https://COLOQUE_AQUI_O_URL_DO_RENDER` |
+| **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
+
+> ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
+
+## Tecnologias
+
+- **Frontend:** React + TypeScript + Vite
+- **Backend:** Node.js + TypeScript + Express
+- **IA:** Google Gemini (via API OpenAI-compatible)
+- **Banco de dados:** MongoDB (Mongoose)
+- **Deploy:** Vercel (frontend) + Render (backend) + MongoDB Atlas
+
+## Configuração local
+
+### 1. Clonar e instalar dependências
+
+```bash
+git clone <repo>
+cd dev-fullstack
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+### 2. Configurar variáveis de ambiente
+
+Crie o arquivo `backend/.env.development`:
+
+```env
+NODE_ENV=development
+PORT=3333
+
+AI_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+AI_MODEL=gemini-2.5-flash
+AI_API_KEY=<sua_chave_do_google_ai_studio>
+
+CORS_ORIGIN=*
+MONGO_URL=mongodb://localhost:27017/meuplanoai
+```
+
+> A chave gratuita é obtida em [Google AI Studio](https://aistudio.google.com/).
+
+### 3. Subir MongoDB local (opcional)
+
+```bash
+cd ..
+docker compose up -d mongodb
+```
+
+### 4. Rodar em desenvolvimento
+
+```bash
+# Terminal 1 — backend
+cd backend && npm run dev
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+### 5. Testes
+
+```bash
+cd backend  && npm test && npm run build
+cd frontend && npm test && npm run build
+```
+
+## Variáveis de ambiente (produção)
+
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `AI_API_URL` | URL da API de IA | `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` |
+| `AI_MODEL` | Modelo Gemini | `gemini-2.5-flash` |
+| `AI_API_KEY` | Chave da API Google | `AQ...` |
+| `MONGO_URL` | Connection string MongoDB | `mongodb+srv://...` |
+| `CORS_ORIGIN` | Origem permitida no CORS | `https://meuplanoai.vercel.app` |
+| `PORT` | Porta do servidor | `3333` (Render injeta automaticamente) |
+* 7.2. O professor exporta o plano de aula como PDF e o caso de uso termina.
+
 ### Fluxo Principal - UC01 - Gerar Plano de Aula
 
 ```mermaid

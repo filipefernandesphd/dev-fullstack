@@ -26,7 +26,19 @@ type Props = {
 };
 
 /**
+ * Número mínimo de caracteres exigido para habilitar o botão "Gerar plano".
+ */
+const MINIMO_CARACTERES = 10;
+
+/**
  * Tela inicial: campo de texto livre + botão para gerar o rascunho.
+ *
+ * Melhorias de UX:
+ * - Contador de caracteres em tempo real.
+ * - Validação no cliente: desabilita o botão enquanto a descrição tiver
+ *   menos de 10 caracteres.
+ * - Spinner visual no botão durante o carregamento.
+ * - Banner de erro destacado com ícone.
  *
  * @param props Propriedades do componente.
  */
@@ -34,13 +46,18 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
   // Estado local com o texto digitado pelo professor.
   const [descricao, setDescricao] = useState('');
 
+  const podeGerar =
+    !carregando && descricao.trim().length >= MINIMO_CARACTERES;
+
   /**
    * Trata o envio do formulário, evitando o recarregamento da página e
    * repassando a descrição para o componente pai.
    */
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    onGerar(descricao);
+    if (podeGerar) {
+      onGerar(descricao);
+    }
   }
 
   return (
@@ -54,13 +71,38 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
         value={descricao}
         placeholder="Ex.: Quero uma aula de 50 minutos sobre introdução à engenharia de software para graduação."
         onChange={(evento) => setDescricao(evento.target.value)}
+        aria-describedby="contador-descricao"
       />
 
-      {/* Exibe a mensagem de erro retornada pela API, se houver. */}
-      {erro && <p role="alert">{erro}</p>}
+      <p
+        id="contador-descricao"
+        className={`contador-caracteres ${
+          descricao.trim().length > 0 && descricao.trim().length < MINIMO_CARACTERES
+            ? 'limite'
+            : ''
+        }`}
+      >
+        {descricao.trim().length}
+        {descricao.trim().length < MINIMO_CARACTERES &&
+          ` / ${MINIMO_CARACTERES} caracteres mínimos`}
+      </p>
 
-      <button type="submit" disabled={carregando}>
-        {carregando ? 'Gerando...' : 'Gerar plano'}
+      {/* Exibe a mensagem de erro retornada pela API, se houver. */}
+      {erro && (
+        <p role="alert" className="erro-banner">
+          {erro}
+        </p>
+      )}
+
+      <button type="submit" disabled={!podeGerar}>
+        {carregando ? (
+          <>
+            <span className="spinner" aria-hidden="true" />
+            Gerando...
+          </>
+        ) : (
+          'Gerar plano'
+        )}
       </button>
     </form>
   );
