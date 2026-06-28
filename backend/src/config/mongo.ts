@@ -14,12 +14,20 @@ export async function conectarMongo(): Promise<void> {
     const url = process.env.MONGO_URL;
 
     if (!url || url.trim().length === 0) {
+        console.log('[MongoDB] MONGO_URL não configurada — persistência desabilitada.');
         return;
     }
 
     if (mongoose.connection.readyState === 1) {
+        console.log('[MongoDB] Já conectado.');
         return;
     }
 
-    await mongoose.connect(url);
+    try {
+        await mongoose.connect(url);
+        console.log('[MongoDB] Conectado com sucesso.');
+    } catch (erro) {
+        console.error('[MongoDB] Falha na conexão:', erro instanceof Error ? erro.message : erro);
+        throw erro;
+    }
 }

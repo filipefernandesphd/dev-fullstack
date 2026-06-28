@@ -34,14 +34,18 @@ const PlanoDeAulaSchema = new Schema(
 
 /**
  * Modelo Mongoose para planos de aula finais.
+ *
+ * Usa o padrão de verificação para evitar erro de "Cannot overwrite model"
+ * em hot-reloads (Render free tier reinicia o processo frequentemente).
  */
-const PlanoDeAulaModel = mongoose.model('PlanoDeAula', PlanoDeAulaSchema);
+const PlanoDeAulaModel =
+    mongoose.models.PlanoDeAula ||
+    mongoose.model('PlanoDeAula', PlanoDeAulaSchema);
 
 /**
  * Persiste o plano de aula final no MongoDB.
  *
  * @param planoFinal Objeto retornado pela IA contendo titulo, plano e relatorio.
- * @returns O documento persistido.
  */
 export async function salvarPlanoFinal(
     planoFinal: PlanoDeAulaFinal,
@@ -53,4 +57,5 @@ export async function salvarPlanoFinal(
     });
 
     await documento.save();
+
 }
