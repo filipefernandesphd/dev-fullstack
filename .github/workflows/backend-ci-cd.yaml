@@ -16,6 +16,14 @@ jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+               # Adiciona o serviço do MongoDB ao Job
+        services:
+          mongodb:
+            image: mongo:6.0
+            ports:
+              - 27017:27017
+              
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
