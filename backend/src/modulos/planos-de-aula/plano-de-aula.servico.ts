@@ -6,7 +6,9 @@ import {
     criarPromptMelhorarRascunho,
 } from "./plano-de-aula.prompts";
 
+import { PlanoDeAulaRepositorio } from './plano-de-aula.repositorio';
 import { PlanoDeAulaRascunho } from "./plano-de-aula.tipos";
+
 
 /**
  * Representa a resposta esperada da IA ao gerar a versão final
@@ -56,6 +58,12 @@ class PlanoDeAulaServico {
     private readonly iaServico: IaServico;
 
     /**
+     * Repositório encarregado da persistência de planos de aula finais no MongoDB.
+     * Adicionado para cumprir a separação de camadas do projeto didático.
+     */
+    private readonly planoDeAulaRepositorio: PlanoDeAulaRepositorio;
+
+    /**
      * Cria uma nova instância do serviço de plano de aula.
      *
      * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
@@ -63,6 +71,11 @@ class PlanoDeAulaServico {
      */
     constructor() {
         this.iaServico = new IaServico();
+        /**
+         * Instancia o repositório de dados. O controlador continua fino
+         * e o serviço assume a responsabilidade de coordenar a persistência.
+         */
+        this.planoDeAulaRepositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -126,13 +139,17 @@ class PlanoDeAulaServico {
     /**
      * Gera a versão final do plano de aula em formato de relatório.
      *
-     * O prompt atual solicita que a IA retorne um JSON contendo:
-     * - titulo;
-     * - plano;
-     * - relatorio.
+     * PORQUÊ:
+     * - Consolida o rascunho revisado em um documento final.
+     * - Garante que o relatório textual esteja acompanhado dos dados estruturados.
+     * - Persiste o plano apenas após validações, evitando salvar dados inválidos.
      *
-     * Por isso, este método usa gerarJson<PlanoDeAulaFinal>(),
-     * e não gerarTexto().
+     * Fluxo:
+     * 1. Valida o rascunho revisado.
+     * 2. Gera o plano final via IA.
+     * 3. Valida o plano final.
+     * 4. Persiste no repositório.
+     * 5. Retorna objeto limpo, sem metadados do banco.
      *
      * @param rascunhoRevisado Rascunho revisado pelo professor.
      * @returns Plano de aula final com dados estruturados e relatório textual.
@@ -153,7 +170,23 @@ class PlanoDeAulaServico {
 
         this.validarPlanoFinal(planoFinal);
 
-        return planoFinal;
+        /**
+         * Requisito Inegociável 6.2: A persistência do plano ocorre estritamente
+         * DEPOIS que a IA gerou o conteúdo e passamos com sucesso por todas as validações.
+         * Isso preserva o comportamento de erro 500 do caminho de falha da IA.
+         */
+        await this.planoDeAulaRepositorio.salvar(planoFinal);
+
+        /**
+         * Requisito Inegociável 6.2: Retorna o objeto puro estruturado vindo da IA.
+         * NUNCA retornamos o documento gerado pelo Mongoose direto, mitigando o vazamento
+         * de campos como _id e __v que quebrariam o teste imutável do contrato da aplicação.
+         */
+        return {
+            titulo: planoFinal.titulo,
+            plano: planoFinal.plano,
+            relatorio: planoFinal.relatorio
+        };
     }
 
     /**
