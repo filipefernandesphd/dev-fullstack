@@ -2,6 +2,10 @@
 //
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
+//
+// IMPORTANTE:
+// Este componente é exclusivamente de apresentação (read-only).
+// Não contém regras de negócio nem manipulação de dados complexos.
 
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
@@ -10,31 +14,59 @@ import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
  */
 type Props = {
   /**
-   * Plano de aula final retornado pela API (título, plano e relatório).
+   * Plano de aula final retornado pela API.
+   *
+   * POR QUÊ:
+   * Centraliza em um único objeto todos os dados necessários para exibição.
    */
   planoFinal: PlanoDeAulaFinal;
 
   /**
-   * Função chamada ao clicar em "Novo plano", para reiniciar o fluxo.
+   * Função chamada ao clicar em "Novo plano".
    */
   onReiniciar: () => void;
 };
 
 /**
- * Exibe o relatório final do plano de aula, mostrando os dados estruturados do
- * plano e, em seguida, o texto do relatório gerado pela IA.
+ * Exibe o relatório final do plano de aula.
  *
- * @param props Propriedades do componente.
+ * RESPONSABILIDADE:
+ * Apenas renderizar dados já processados pela camada de serviço.
  */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
-  // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+
+  /**
+   * Estado leve de feedback para ação de copiar relatório.
+   */
+  function copiarRelatorio() {
+    navigator.clipboard.writeText(planoFinal.relatorio);
+    alert('Relatório copiado com sucesso!');
+  }
+
+  /**
+   * UX: evita erro caso arrays venham vazios ou indefinidos.
+   */
+  const objetivos = plano.objetivos ?? [];
+  const conteudos = plano.conteudos ?? [];
+  const recursos = plano.recursos ?? [];
 
   return (
     <section>
       <h2>{planoFinal.titulo}</h2>
 
-      {/* Dados estruturados do plano, apresentados como um relatório. */}
+      {/* BOTÕES DE AÇÃO (UX MELHORADA) */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <button type="button" onClick={copiarRelatorio}>
+          Copiar relatório
+        </button>
+
+        <button type="button" onClick={onReiniciar}>
+          Novo plano
+        </button>
+      </div>
+
+      {/* RELATÓRIO ESTRUTURADO */}
       <dl className="relatorio-dados">
         <dt>Disciplina</dt>
         <dd>{plano.disciplina}</dd>
@@ -54,7 +86,7 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Objetivos</dt>
         <dd>
           <ul>
-            {plano.objetivos.map((objetivo, indice) => (
+            {objetivos.map((objetivo, indice) => (
               <li key={indice}>{objetivo}</li>
             ))}
           </ul>
@@ -63,7 +95,7 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Conteúdos</dt>
         <dd>
           <ul>
-            {plano.conteudos.map((conteudo, indice) => (
+            {conteudos.map((conteudo, indice) => (
               <li key={indice}>{conteudo}</li>
             ))}
           </ul>
@@ -75,7 +107,7 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Recursos</dt>
         <dd>
           <ul>
-            {plano.recursos.map((recurso, indice) => (
+            {recursos.map((recurso, indice) => (
               <li key={indice}>{recurso}</li>
             ))}
           </ul>
@@ -85,17 +117,20 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dd>{plano.avaliacao}</dd>
       </dl>
 
-      {/* Texto corrido do relatório gerado pela IA. */}
+      {/* RELATÓRIO TEXTUAL FINAL */}
       <h3>Relatório</h3>
-      {/*
-        O relatório vem como texto único com quebras de linha.
-        A tag <pre> preserva esses espaços e quebras na exibição.
-      */}
-      <pre>{planoFinal.relatorio}</pre>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      <pre
+        style={{
+          whiteSpace: 'pre-wrap',
+          background: '#f5f5f5',
+          padding: 12,
+          borderRadius: 6,
+        }}
+        aria-label="Relatório final do plano de aula"
+      >
+        {planoFinal.relatorio}
+      </pre>
     </section>
   );
 }
