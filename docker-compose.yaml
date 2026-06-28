@@ -24,6 +24,16 @@ services:
     env_file:
       - ./backend/.env.development
 
+  # Serviço de banco de dados adicionado para persistência local
+  mongodb:
+    image: mongo:latest
+    container_name: meuplano_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
   ollama:
     container_name: ollama
     image: ollama/ollama:latest
@@ -59,4 +69,5 @@ services:
       - ./frontend/.env.development           # injeta variaveis dentro do ambiente
 
 volumes:
-  ollama_data: 
+  ollama_data:
+  mongodb_data:

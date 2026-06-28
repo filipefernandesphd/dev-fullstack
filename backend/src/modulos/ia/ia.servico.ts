@@ -32,20 +32,6 @@ type RespostaIa = {
  * Serviço responsável pela comunicação com o provedor de Inteligência Artificial.
  *
  * Este serviço é genérico. Ele não conhece regras específicas de plano de aula.
- *
- * Responsabilidades:
- *
- * - ler AI_API_KEY, AI_MODEL e AI_API_URL a partir de process.env;
- * - enviar prompts para uma API compatível com Chat Completions;
- * - retornar texto gerado pela IA;
- * - converter respostas textuais em JSON quando necessário.
- *
- * Exemplos de provedores compatíveis:
- *
- * - OpenAI;
- * - OpenRouter;
- * - LiteLLM;
- * - Ollama usando /v1/chat/completions.
  */
 class IaServico {
     private readonly apiUrl: string;
@@ -71,14 +57,13 @@ class IaServico {
     }
 
     /**
-    * Envia um prompt para o provedor de IA e retorna o texto gerado.
-    *
-    * @param prompt Prompt textual enviado para a IA.
-    * @returns Texto retornado pela IA.
-    *
-    * @throws Error Caso a API de IA retorne erro HTTP.
-    * @throws Error Caso a resposta da IA venha vazia ou em formato inesperado.
-    */
+     * Envia um prompt para o provedor de IA e retorna o texto gerado.
+     *
+     * @param prompt Prompt textual enviado para a IA.
+     * @returns Texto retornado pela IA.
+     *
+     * @throws Error com mensagens amigáveis baseadas no status HTTP.
+     */
     async gerarTexto(prompt: string): Promise<string> {
         const corpoRequisicao: RequisicaoIa = {
             model: this.modelo,
@@ -86,8 +71,7 @@ class IaServico {
             messages: [
                 {
                     role: 'system',
-                    content:
-                        'Você é um assistente pedagógico especializado em planejamento de uma única aula.',
+                    content: 'Você é um assistente pedagógico especializado em planejamento de uma única aula.',
                 },
                 {
                     role: 'user',
@@ -96,89 +80,96 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
-
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
-
-        if (!resposta.ok) {
-            const corpoErro = await resposta.text();
-
-            throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
-            );
+        // Trata a especificidade do Gemini (Chave via Query Param) vs OpenAI/Ollama (Bearer Token)
+        const isGemini = this.apiUrl.includes('generativelanguage.googleapis.com');
+        const urlFinal = isGemini ? `${this.apiUrl}?key=${this.apiKey}` : this.apiUrl;
+        const headers: Record<string, string> = { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${this.apiKey}`
         }
+        
+        // if (!isGemini) {
+        //      headers['Authorization'] = `Bearer ${this.apiKey}`;
+        // }
 
-        const corpo = (await resposta.json()) as RespostaIa;
+        try {
+            // Utiliza AbortController para tratar timeouts
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        const conteudo = corpo.choices?.[0]?.message?.content;
+            const resposta = await fetch(urlFinal, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(corpoRequisicao),
+                signal: controller.signal
+            });
 
-        if (!conteudo || typeof conteudo !== 'string') {
-            throw new Error('Resposta da IA veio vazia ou em formato inválido.');
+            clearTimeout(timeoutId);
+
+            if (!resposta.ok) {
+                await this.tratarErrosHttp(resposta);
+            }
+
+            const corpo = (await resposta.json()) as RespostaIa;
+            const conteudo = corpo.choices?.[0]?.message?.content;
+
+            if (!conteudo || typeof conteudo !== 'string') {
+                throw new Error('A inteligência artificial retornou uma resposta vazia ou em formato inesperado.');
+            }
+
+            return conteudo;
+        } catch (erro: any) {
+            // Intercepta o erro de timeout nativo do fetch (AbortError)
+            if (erro.name === 'AbortError') {
+                throw new Error('A conexão com a IA expirou (timeout). Tente novamente mais tarde.');
+            }
+            throw erro;
         }
-
-        return conteudo;
-    };
+    }
 
     /**
-     * Envia um prompt para a IA esperando receber um JSON válido.
-     *
-     * Este método:
-     *
-     * 1. chama gerarTexto(prompt);
-     * 2. limpa possíveis marcações de Markdown;
-     * 3. converte o texto para JSON;
-     * 4. retorna o objeto tipado.
-     *
-     * @param prompt Prompt textual enviado para a IA.
-     * @returns Objeto convertido para o tipo esperado.
-     *
-     * @template T Tipo esperado para o JSON retornado.
-     *
-     * @throws Error Caso a IA não retorne um JSON válido.
+     * Centraliza o tratamento de erros HTTP do provedor de IA.
      */
+    private async tratarErrosHttp(resposta: Response): Promise<never> {
+        const status = resposta.status;
+        
+        // Tenta extrair detalhes extras do provedor, se houver
+        let detalhesErro = '';
+        try {
+            const corpoErro = await resposta.text();
+            detalhesErro = ` Detalhes técnicos: ${corpoErro}`;
+        } catch {
+            // Ignora se não conseguir ler o corpo
+        }
+
+        switch (status) {
+            case 400:
+                throw new Error('A requisição para a IA foi malformada ou inválida.' + detalhesErro);
+            case 401:
+            case 403:
+                throw new Error('A chave de acesso (API Key) da inteligência artificial é inválida ou expirou.');
+            case 429:
+                throw new Error('Você atingiu o limite de requisições da IA gratuita. Por favor, aguarde alguns minutos e tente novamente.');
+            case 500:
+            case 502:
+            case 503:
+                throw new Error('O provedor de inteligência artificial está indisponível no momento. Tente novamente mais tarde.');
+            default:
+                throw new Error(`Erro desconhecido ao comunicar com a IA (Status: ${status}).` + detalhesErro);
+        }
+    }
+
     async gerarJson<T>(prompt: string): Promise<T> {
         const textoGerado = await this.gerarTexto(prompt);
-
         const textoLimpo = this.limparRespostaJson(textoGerado);
 
         try {
             return JSON.parse(textoLimpo) as T;
         } catch {
-            throw new Error(
-                `A IA não retornou um JSON válido. Conteúdo recebido: ${textoGerado}`,
-            );
+            throw new Error(`A IA não retornou um formato JSON válido para a extração de dados.`);
         }
     }
 
-    /**
-     * Remove marcações comuns que modelos de IA podem adicionar ao redor do JSON.
-     *
-     * Alguns modelos, especialmente locais, podem responder assim:
-     *
-     * ```json
-     * { "titulo": "Plano de Aula" }
-     * ```
-     *
-     * Este método remove essas marcações para permitir o uso de JSON.parse.
-     *
-     * @param texto Texto bruto retornado pela IA.
-     * @returns Texto limpo para conversão JSON.
-     */
     private limparRespostaJson(texto: string): string {
         return texto
             .trim()
