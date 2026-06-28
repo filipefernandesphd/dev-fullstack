@@ -22,7 +22,7 @@ export class PlanoDeAulaRepositorio {
         try {
             await PlanoDeAulaModelo.create({
                 titulo: dados.titulo,
-                plano: dados.plano,
+                plano: String(dados.plano),
                 relatorio: dados.relatorio
             });
             console.log(`Sucesso: Plano "${dados.titulo}" persistido com êxito no MongoDB.`);
