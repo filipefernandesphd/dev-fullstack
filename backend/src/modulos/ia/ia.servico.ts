@@ -51,12 +51,12 @@ class IaServico {
     private readonly apiUrl: string;
     private readonly apiKey: string;
     private readonly modelo: string;
-    
+
     /**
      * Tempo limite em milissegundos para aguardar a resposta do provedor de IA.
      * Define um teto de 30 segundos para evitar requisições infinitas ou travadas.
      */
-    private readonly TEMPO_LIMITE_MS = 30000; 
+    private readonly TEMPO_LIMITE_MS = 30000;
 
     constructor() {
         this.apiUrl = process.env.AI_API_URL || '';
@@ -86,6 +86,8 @@ class IaServico {
     * @throws Error Caso a resposta da IA venha vazia ou em formato inesperado.
     */
     async gerarTexto(prompt: string): Promise<string> {
+
+
         const corpoRequisicao: RequisicaoIa = {
             model: this.modelo,
             temperature: 0.2,
@@ -169,24 +171,68 @@ class IaServico {
      * @throws Error Exceção correspondente ao código HTTP capturado.
      */
     private async tratarErroHttp(resposta: Response): Promise<never> {
+
         let detalhesErro = '';
         try {
             detalhesErro = await resposta.text();
         } catch {
             detalhesErro = 'Não foi possível ler os detalhes do erro.';
         }
+        /**
+         * Vá além da config: trate erros do provedor (ex.: 429 de limite de uso, timeout,
+chave inválida) com mensagens claras, mantendo o formato de resposta.
+         */
 
         switch (resposta.status) {
+            case 400:
+                // 400 - Bad Request: payload inválido, modelo mal formado ou estrutura fora do padrão Chat Completions
+                throw new Error(
+                    "Algo deu errado na requisição da IA. Verifique os dados enviados e tente novamente."
+                );
+
             case 401:
-                throw new Error(`Falha de Autenticação (401): A chave de API (AI_API_KEY) fornecida é inválida ou expirou.`);
+                // 401 - Unauthorized: chave da API inválida, ausente ou expirada
+                throw new Error(
+                    "Erro de autenticação na IA. A chave de acesso não é válida ou expirou."
+                );
+
+            case 403:
+                // 403 - Forbidden: API não habilitada ou chave sem permissão
+                throw new Error(
+                    "Acesso negado à IA. Verifique se sua conta tem permissão para usar o serviço."
+                );
+
+            case 404:
+                // 404 - Not Found: endpoint ou modelo inexistente
+                throw new Error(
+                    "O serviço de IA não foi encontrado. Verifique a configuração do modelo."
+                );
+
+            case 408:
+                // 408 - Request Timeout: requisição demorou além do limite do provedor
+                throw new Error(
+                    "A IA demorou muito para responder. Tente novamente em alguns segundos."
+                );
+
             case 429:
-                throw new Error(`Limite Atingido (429): Muitas requisições enviadas em curto período ou créditos esgotados no provedor.`);
+                // 429 - Too Many Requests: limite de uso ou cota gratuita excedida
+                throw new Error(
+                    "Você atingiu o limite de uso da IA. Aguarde um momento e tente novamente."
+                );
+
             case 500:
             case 502:
             case 503:
-                throw new Error(`Erro no Provedor (Anomalia ${resposta.status}): O serviço de IA está instável ou fora do ar no momento.`);
+                // 5xx - Erro no servidor do provedor (instabilidade, queda ou manutenção)
+                throw new Error(
+                    "A IA está temporariamente indisponível. Tente novamente mais tarde."
+                );
+
             default:
-                throw new Error(`Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${detalhesErro}`);
+                // Outros erros não mapeados pelo provedor
+                throw new Error(
+                    `Erro inesperado ao se comunicar com a IA. Status ${resposta.status}.`
+                );
         }
     }
 

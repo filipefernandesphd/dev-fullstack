@@ -1,5 +1,5 @@
 import { PlanoDeAulaModelo } from './plano-de-aula.modelo';
-import { PlanoFinalDados } from './plano-de-aula.tipos'; // Use o tipo correspondente que você já tem em tipos.ts
+import { PlanoDeAulaFinal } from './plano-de-aula.tipos'; // Use o tipo correspondente que você já tem em tipos.ts
 
 /**
  * Repositório responsável pelas operações de persistência de planos de aula no MongoDB.
@@ -12,7 +12,7 @@ export class PlanoDeAulaRepositorio {
      * Salva de forma segura o relatório final de um plano de aula no MongoDB.
      * * @param dados Objeto contendo o título, o rascunho do plano e o relatório final.
      */
-    async salvar(dados: PlanoFinalDados): Promise<void> {
+    async salvar(dados: PlanoDeAulaFinal): Promise<void> {
         // Se a variável MONGO_URL não existir, ignora silenciosamente sem quebrar os testes 
         if (!process.env.MONGO_URL) {
             console.warn('Aviso: MONGO_URL não configurada. Salvamento no banco pulado.');
