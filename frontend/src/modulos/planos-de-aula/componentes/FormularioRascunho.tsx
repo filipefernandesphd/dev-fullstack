@@ -205,7 +205,11 @@ function FormularioRascunho({
         onChange={(e) => setOrientacoes(e.target.value)}
       />
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && (
+        <p role="alert" className="alerta">
+          {erro}
+        </p>
+      )}
 
       {/*
         Dois botões:
@@ -214,11 +218,18 @@ function FormularioRascunho({
         - "Gerar versão final" (type="submit"): avança para o relatório final.
       */}
       <div className="acoes">
-        <button type="button" onClick={aoMelhorar} disabled={carregando}>
+        <button
+          type="button"
+          className="botao-secundario"
+          onClick={aoMelhorar}
+          disabled={carregando}
+        >
+          {carregando && <span className="spinner" aria-hidden="true" />}
           {carregando ? 'Processando...' : 'Melhorar plano'}
         </button>
 
         <button type="submit" disabled={carregando}>
+          {carregando && <span className="spinner" aria-hidden="true" />}
           {carregando ? 'Processando...' : 'Gerar versão final'}
         </button>
       </div>

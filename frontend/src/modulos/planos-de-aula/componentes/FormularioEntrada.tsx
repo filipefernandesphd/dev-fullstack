@@ -30,9 +30,18 @@ type Props = {
  *
  * @param props Propriedades do componente.
  */
+// Exigimos um mínimo de caracteres antes de deixar gerar o plano. A ideia é evitar
+// que o professor mande uma descrição vazia ou curta demais pra IA trabalhar - aí o
+// botão fica desabilitado e o contador avisa quanto falta. O valor 10 é o mesmo
+// sugerido no enunciado da atividade.
+const MINIMO_CARACTERES = 10;
+
 function FormularioEntrada({ onGerar, carregando, erro }: Props) {
   // Estado local com o texto digitado pelo professor.
   const [descricao, setDescricao] = useState('');
+
+  const quantidade = descricao.trim().length;
+  const descricaoValida = quantidade >= MINIMO_CARACTERES;
 
   /**
    * Trata o envio do formulário, evitando o recarregamento da página e
@@ -40,6 +49,7 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
    */
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    if (!descricaoValida) return;
     onGerar(descricao);
   }
 
@@ -52,14 +62,29 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
         id="descricao"
         rows={4}
         value={descricao}
+        aria-describedby="ajuda-descricao"
         placeholder="Ex.: Quero uma aula de 50 minutos sobre introdução à engenharia de software para graduação."
         onChange={(evento) => setDescricao(evento.target.value)}
       />
 
-      {/* Exibe a mensagem de erro retornada pela API, se houver. */}
-      {erro && <p role="alert">{erro}</p>}
+      <p
+        id="ajuda-descricao"
+        className={`contador ${descricaoValida ? 'contador--ok' : ''}`}
+      >
+        {descricaoValida
+          ? `${quantidade} caracteres`
+          : `Faltam ${MINIMO_CARACTERES - quantidade} caractere(s) para gerar o plano`}
+      </p>
 
-      <button type="submit" disabled={carregando}>
+      {/* Exibe a mensagem de erro retornada pela API, se houver. */}
+      {erro && (
+        <p role="alert" className="alerta">
+          {erro}
+        </p>
+      )}
+
+      <button type="submit" disabled={carregando || !descricaoValida}>
+        {carregando && <span className="spinner" aria-hidden="true" />}
         {carregando ? 'Gerando...' : 'Gerar plano'}
       </button>
     </form>

@@ -6,6 +6,38 @@ O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturada
 
 > Este projeto é exclusivo para fins didáticos para a disciplina de **Desenvolvimento Full Stack** do curso de Especialização em Desenvolvimento Full Stack do IF Sudeste MG - *Campus* Manhuaçu, ofertado pelo [Prof. Dr. Filipe Fernandes](filipefernandesphd.com).
 
+## App online
+
+- **Frontend (Vercel):** https://dev-fullstack-sigma.vercel.app
+- **Backend (Render):** https://meuplano-ai.onrender.com
+
+A API no Render é free tier e "dorme" quando fica sem uso, então a primeira chamada pode levar uns 50s pra acordar.
+
+## Como rodar localmente
+
+Backend (em `./backend`): `npm install`, `npm run dev`, `npm test`, `npm run build`. API em `http://localhost:3333`, docs em `/docs`.
+
+Frontend (em `./frontend`): `npm install`, `npm run dev`, `npm test`, `npm run build`. App em `http://localhost:5173`.
+
+Via Docker (na raiz): `docker compose up -d` (sobe backend, frontend, ollama e mongodb).
+
+## Variáveis de ambiente
+
+Backend (`backend/.env.development`, baseado em `backend/.env.example`):
+
+- `AI_API_URL`, `AI_MODEL`, `AI_API_KEY`: integração com a IA (Google Gemini, free tier).
+- `AI_TIMEOUT_MS`: tempo máximo de espera pela IA (opcional).
+- `MONGO_URL`: conexão com o MongoDB. Se vazia, a persistência fica desligada (não derruba a requisição).
+- `CORS_ORIGIN`: origem liberada para o frontend.
+
+Frontend (`frontend/.env.development`): `VITE_API_URL` apontando para a API.
+
+## Deploy
+
+- **MongoDB Atlas:** cluster free M0; a string de conexão vira `MONGO_URL` no Render.
+- **Render (backend):** configurar `AI_*`, `MONGO_URL` e `CORS_ORIGIN` (com o domínio do Vercel). A porta vem de `PORT`.
+- **Vercel (frontend):** configurar `VITE_API_URL` apontando para a API no Render **antes** do build (o Vite "inlina" essa variável no build).
+
 ## Estrutura do Projeto
 
 O mono-repositório contém a implementação do app **MeuPlano.AI** e está estruturado da seguinte forma:

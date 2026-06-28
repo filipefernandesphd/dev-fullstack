@@ -23,6 +23,7 @@ import type {
 import FormularioEntrada from './modulos/planos-de-aula/componentes/FormularioEntrada';
 import FormularioRascunho from './modulos/planos-de-aula/componentes/FormularioRascunho';
 import VisualizacaoRelatorio from './modulos/planos-de-aula/componentes/VisualizacaoRelatorio';
+import IndicadorEtapas from './modulos/planos-de-aula/componentes/IndicadorEtapas';
 
 /**
  * Etapas possíveis do fluxo principal.
@@ -128,7 +129,14 @@ function App() {
 
   return (
     <main className="app">
-      <h1>MeuPlano.AI</h1>
+      <header className="cabecalho">
+        <h1>MeuPlano.AI</h1>
+        <p className="subtitulo">
+          Descreva sua aula e deixe a IA montar um plano estruturado.
+        </p>
+      </header>
+
+      <IndicadorEtapas etapaAtual={etapa} />
 
       {/* Etapa 1: entrada em linguagem natural */}
       {etapa === 'entrada' && (
