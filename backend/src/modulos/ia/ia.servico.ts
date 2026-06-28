@@ -83,11 +83,14 @@ class IaServico {
         // Trata a especificidade do Gemini (Chave via Query Param) vs OpenAI/Ollama (Bearer Token)
         const isGemini = this.apiUrl.includes('generativelanguage.googleapis.com');
         const urlFinal = isGemini ? `${this.apiUrl}?key=${this.apiKey}` : this.apiUrl;
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        
-        if (!isGemini) {
-             headers['Authorization'] = `Bearer ${this.apiKey}`;
+        const headers: Record<string, string> = { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${this.apiKey}`
         }
+        
+        // if (!isGemini) {
+        //      headers['Authorization'] = `Bearer ${this.apiKey}`;
+        // }
 
         try {
             // Utiliza AbortController para tratar timeouts
