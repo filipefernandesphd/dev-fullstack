@@ -1,5 +1,7 @@
 import { IaServico } from "../ia/ia.servico";
 
+import { PlanoDeAulaRepositorio } from "./plano-de-aula.repositorio";
+
 import {
     criarPromptGerarPlanoFinal,
     criarPromptGerarRascunho,
@@ -56,13 +58,23 @@ class PlanoDeAulaServico {
     private readonly iaServico: IaServico;
 
     /**
+     * Repositório responsável pela persistência dos planos de aula no MongoDB.
+     */
+    private readonly repositorio: PlanoDeAulaRepositorio;
+
+    /**
      * Cria uma nova instância do serviço de plano de aula.
      *
      * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
      * diretamente de process.env.
+     *
+     * O repositório é criado para lidar com a persistência no MongoDB.
+     * Se o MongoDB não estiver disponível, a persistência é ignorada
+     * silenciosamente (não-fatal).
      */
     constructor() {
         this.iaServico = new IaServico();
+        this.repositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -152,6 +164,17 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        /**
+         * Persiste o plano final no MongoDB APÓS a IA gerar com sucesso.
+         *
+         * A persistência é não-fatal: se falhar, o erro é registrado em log
+         * e o professor recebe o plano normalmente. Isso garante que:
+         * 1. O teste de /final continua passando (sem MongoDB).
+         * 2. O caminho de falha da IA (status 500) é preservado.
+         * 3. O professor não é prejudicado por falhas de banco de dados.
+         */
+        await this.repositorio.salvar(planoFinal);
 
         return planoFinal;
     }

@@ -118,6 +118,32 @@ class IaServico {
         if (!resposta.ok) {
             const corpoErro = await resposta.text();
 
+            /**
+             * Tratamento diferenciado para erros comuns de provedores de IA:
+             *
+             * - 401: chave de API inválida ou expirada.
+             * - 429: limite de requisições excedido (rate limit).
+             * - 408 / timeout: o provedor demorou demais para responder.
+             * - Outros: erro genérico com detalhes do provedor.
+             */
+            if (resposta.status === 401) {
+                throw new Error(
+                    'Chave de API inválida ou expirada. Verifique a variável AI_API_KEY.',
+                );
+            }
+
+            if (resposta.status === 429) {
+                throw new Error(
+                    'Limite de requisições excedido no provedor de IA. Aguarde alguns instantes e tente novamente.',
+                );
+            }
+
+            if (resposta.status === 408) {
+                throw new Error(
+                    'O provedor de IA demorou demais para responder (timeout). Tente novamente.',
+                );
+            }
+
             throw new Error(
                 `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
             );

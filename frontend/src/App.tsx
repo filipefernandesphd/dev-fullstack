@@ -130,6 +130,24 @@ function App() {
     <main className="app">
       <h1>MeuPlano.AI</h1>
 
+      {/* Indicador de etapas: mostra ao professor em qual passo ele está. */}
+      <nav className="indicador-etapas" aria-label="Etapas do fluxo">
+        <ol>
+          <li className={etapa === 'entrada' ? 'etapa-ativa' : etapa === 'formulario' || etapa === 'relatorio' ? 'etapa-concluida' : ''}>
+            <span className="etapa-numero">1</span>
+            <span className="etapa-nome">Descrição</span>
+          </li>
+          <li className={etapa === 'formulario' ? 'etapa-ativa' : etapa === 'relatorio' ? 'etapa-concluida' : ''}>
+            <span className="etapa-numero">2</span>
+            <span className="etapa-nome">Revisão</span>
+          </li>
+          <li className={etapa === 'relatorio' ? 'etapa-ativa' : ''}>
+            <span className="etapa-numero">3</span>
+            <span className="etapa-nome">Relatório</span>
+          </li>
+        </ol>
+      </nav>
+
       {/* Etapa 1: entrada em linguagem natural */}
       {etapa === 'entrada' && (
         <FormularioEntrada
