@@ -1,3 +1,12 @@
+
+## Aplicação publicada
+
+Frontend:
+https://dev-fullstack-lidiaa.vercel.app/
+
+Lidia M. de Bem B. da Silva
+
+
 # MeuPlano.AI
 
 Professores gastam muito tempo criando planos de aula claros, organizados e adaptados a diferentes turmas.
