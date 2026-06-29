@@ -215,11 +215,25 @@ function FormularioRascunho({
       */}
       <div className="acoes">
         <button type="button" onClick={aoMelhorar} disabled={carregando}>
-          {carregando ? 'Processando...' : 'Melhorar plano'}
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true"></span>
+              Processando...
+            </>
+          ) : (
+            'Melhorar plano'
+          )}
         </button>
 
         <button type="submit" disabled={carregando}>
-          {carregando ? 'Processando...' : 'Gerar versão final'}
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true"></span>
+              Processando...
+            </>
+          ) : (
+            'Gerar versão final'
+          )}
         </button>
       </div>
     </form>

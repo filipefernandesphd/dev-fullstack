@@ -1,5 +1,7 @@
 # MeuPlano.AI
 
+🔗 **App em produção:** [https://dev-fullstack-kohl.vercel.app](https://dev-fullstack-kohl.vercel.app)
+
 Professores gastam muito tempo criando planos de aula claros, organizados e adaptados a diferentes turmas.
 
 O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturadas de planos de aula, permitindo que o professor revise, edite e salve seus planejamentos com mais rapidez.

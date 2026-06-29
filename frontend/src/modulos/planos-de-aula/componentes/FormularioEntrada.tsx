@@ -35,6 +35,16 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
   const [descricao, setDescricao] = useState('');
 
   /**
+   * Número mínimo de caracteres exigido pela API para a descrição.
+   */
+  const MINIMO_CARACTERES = 10;
+
+  /**
+   * Indica se a descrição possui caracteres suficientes para envio.
+   */
+  const descricaoValida = descricao.trim().length >= MINIMO_CARACTERES;
+
+  /**
    * Trata o envio do formulário, evitando o recarregamento da página e
    * repassando a descrição para o componente pai.
    */
@@ -56,11 +66,23 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
         onChange={(evento) => setDescricao(evento.target.value)}
       />
 
+      {/* Contador de caracteres: mostra quantos faltam ou quantos foram digitados. */}
+      <p className={`contador-caracteres ${descricaoValida ? 'contador-ok' : 'contador-insuficiente'}`}>
+        {descricao.trim().length}/{MINIMO_CARACTERES} caracteres mínimos
+      </p>
+
       {/* Exibe a mensagem de erro retornada pela API, se houver. */}
       {erro && <p role="alert">{erro}</p>}
 
-      <button type="submit" disabled={carregando}>
-        {carregando ? 'Gerando...' : 'Gerar plano'}
+      <button type="submit" disabled={carregando || !descricaoValida}>
+        {carregando ? (
+          <>
+            <span className="spinner" aria-hidden="true"></span>
+            Gerando...
+          </>
+        ) : (
+          'Gerar plano'
+        )}
       </button>
     </form>
   );
