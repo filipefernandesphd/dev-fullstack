@@ -43,6 +43,8 @@ ENV NODE_ENV=production
 
 RUN npm install --omit=dev
 
+# COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/docs ./docs
 
 CMD ["npm", "start"]
