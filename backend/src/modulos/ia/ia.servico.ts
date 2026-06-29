@@ -96,30 +96,65 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
+        const controlador = new AbortController();
 
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
+        const tempoLimite = setTimeout(() => {
+            controlador.abort();
+        }, 30000);
+
+        let resposta: Response;
+
+        try {
+            resposta = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    /**
+                     * Informa que estamos enviando JSON no corpo da requisição.
+                     */
+                    'Content-Type': 'application/json',
+
+                    /**
+                     * Envia a chave no formato Bearer Token.
+                     *
+                     * Mesmo quando usamos Ollama local com chave fictícia,
+                     * manter esse cabeçalho simula uma API real.
+                     */
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(corpoRequisicao),
+                signal: controlador.signal,
+            });
+        } catch (erro) {
+            if (erro instanceof Error && erro.name === 'AbortError') {
+                throw new Error(
+                    'O serviço de IA demorou para responder. Tente novamente.',
+                );
+            }
+
+            throw new Error(
+                'Não foi possível conectar ao serviço de IA.',
+            );
+        } finally {
+            clearTimeout(tempoLimite);
+        }
 
         if (!resposta.ok) {
             const corpoErro = await resposta.text();
 
+            if (resposta.status === 429) {
+                throw new Error(
+                    'Limite de uso da IA excedido. Aguarde alguns segundos e tente novamente.',
+                );
+            }
+
+            if (resposta.status === 401 || resposta.status === 403) {
+                throw new Error(
+                    'A chave da IA é inválida ou não possui permissão.',
+                );
+            }
+
             throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
+                `Erro no serviço de IA (${resposta.status}). Detalhes: ${corpoErro}`,
             );
         }
 

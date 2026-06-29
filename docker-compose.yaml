@@ -32,6 +32,14 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
+  mongo:
+    container_name: mongo
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   # Serviço do frontend (desenvolvimento)
   frontend-dev:
     container_name: frontend-dev
@@ -60,3 +68,5 @@ services:
 
 volumes:
   ollama_data: 
+  mongo_data:
+
