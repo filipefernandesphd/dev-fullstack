@@ -1,6 +1,16 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock do mongoose no topo, antes de importar app
+// Mock completo do mongoose
+vi.mock('mongoose', () => {
+  return {
+    connect: vi.fn().mockResolvedValue({}),
+    Schema: class {},   // devolve uma classe vazia para Schema
+    model: vi.fn(),     // devolve uma função fake para model
+  };
+});
+
 import type { PlanoDeAulaRascunho } from '../../../src/modulos/planos-de-aula/plano-de-aula.tipos';
 
 const { gerarJsonMock } = vi.hoisted(() => {
