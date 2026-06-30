@@ -6,6 +6,8 @@
 
 import { useState, type FormEvent } from 'react';
 
+import { LuTriangleAlert, LuArrowLeft, LuRefreshCw, LuFileCheck } from 'react-icons/lu';
+
 import type { PlanoDeAulaRascunho } from '../plano-de-aula.tipos';
 
 /**
@@ -29,9 +31,20 @@ type Props = {
   onMelhorar: (rascunho: PlanoDeAulaRascunho, orientacoes: string) => void;
 
   /**
-   * Indica que uma requisição está em andamento (desabilita o botão).
+   * Função chamada ao clicar em "Voltar", retornando à tela de entrada.
    */
-  carregando: boolean;
+  onVoltar: () => void;
+
+  /**
+   * Indica que a melhoria está em andamento (spinner no botão "Melhorar plano").
+   */
+  carregandoMelhorar: boolean;
+
+  /**
+   * Indica que a geração da versão final está em andamento
+   * (spinner no botão "Gerar versão final").
+   */
+  carregandoFinal: boolean;
 
   /**
    * Mensagem de erro a ser exibida (ou null quando não há erro).
@@ -60,13 +73,21 @@ type CampoLista = 'objetivos' | 'conteudos' | 'recursos';
 /**
  * Formulário editável do rascunho do plano de aula.
  *
+ * Melhorias de UX:
+ * - Spinner isolado por botão: "Melhorar plano" e "Gerar versão final" possuem
+ *   estados de carregamento independentes.
+ * - Botão "Voltar" permite retornar à tela de entrada sem perder o contexto.
+ * - Banner de erro destacado com ícone.
+ *
  * @param props Propriedades do componente.
  */
 function FormularioRascunho({
   rascunhoInicial,
   onGerarFinal,
   onMelhorar,
-  carregando,
+  onVoltar,
+  carregandoMelhorar,
+  carregandoFinal,
   erro,
 }: Props) {
   // Estado local com uma cópia editável do rascunho recebido.
@@ -205,21 +226,48 @@ function FormularioRascunho({
         onChange={(e) => setOrientacoes(e.target.value)}
       />
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && (
+        <p role="alert" className="erro-banner">
+          <LuTriangleAlert aria-hidden="true" />
+          {erro}
+        </p>
+      )}
 
       {/*
-        Dois botões:
-        - "Melhorar plano" (type="button"): pede à IA um novo rascunho com base
-          nas orientações, permanecendo nesta tela de revisão;
+        Três grupos de ações:
+        - "Voltar" (ghost): retorna à tela de entrada;
+        - "Melhorar plano" (type="button"): pede à IA um novo rascunho;
         - "Gerar versão final" (type="submit"): avança para o relatório final.
       */}
       <div className="acoes">
-        <button type="button" onClick={aoMelhorar} disabled={carregando}>
-          {carregando ? 'Processando...' : 'Melhorar plano'}
+        <button type="button" className="ghost" onClick={onVoltar}>
+          <LuArrowLeft aria-hidden="true" /> Voltar
         </button>
 
-        <button type="submit" disabled={carregando}>
-          {carregando ? 'Processando...' : 'Gerar versão final'}
+        <button
+          type="button"
+          onClick={aoMelhorar}
+          disabled={carregandoMelhorar || carregandoFinal}
+        >
+          {carregandoMelhorar ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Processando...
+            </>
+          ) : (
+            <><LuRefreshCw aria-hidden="true" /> Melhorar plano</>
+          )}
+        </button>
+
+        <button type="submit" disabled={carregandoMelhorar || carregandoFinal}>
+          {carregandoFinal ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Processando...
+            </>
+          ) : (
+            <><LuFileCheck aria-hidden="true" /> Gerar versão final</>
+          )}
         </button>
       </div>
     </form>

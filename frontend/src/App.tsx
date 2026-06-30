@@ -8,7 +8,9 @@
 // O App não conhece detalhes de HTTP: ele apenas chama o serviço
 // (plano-de-aula.servico) e controla qual tela mostrar conforme o estado.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+import { LuMoon, LuSun } from 'react-icons/lu';
 
 // Instância pronta do cliente HTTP (camada de serviço).
 import { planoDeAulaServico } from './modulos/planos-de-aula/plano-de-aula.servico';
@@ -30,6 +32,33 @@ import VisualizacaoRelatorio from './modulos/planos-de-aula/componentes/Visualiz
 type Etapa = 'entrada' | 'formulario' | 'relatorio';
 
 /**
+ * Hook simples para gerenciar tema claro/escuro.
+ * Persiste a preferência no localStorage e aplica data-theme no <html>.
+ */
+function useTema() {
+  const [tema, setTema] = useState<'light' | 'dark'>(() => {
+    const salvo = localStorage.getItem('meuplanoai-tema');
+    if (salvo === 'dark' || salvo === 'light') return salvo;
+    const prefereDark =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefereDark ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('meuplanoai-tema', tema);
+  }, [tema]);
+
+  function alternarTema() {
+    setTema((atual) => (atual === 'light' ? 'dark' : 'light'));
+  }
+
+  return { tema, alternarTema };
+}
+
+/**
  * Componente raiz da aplicação MeuPlano.AI.
  */
 function App() {
@@ -46,17 +75,27 @@ function App() {
   // Plano final (disponível na etapa "relatorio").
   const [planoFinal, setPlanoFinal] = useState<PlanoDeAulaFinal | null>(null);
 
-  // Indica requisição em andamento (para desabilitar botões / mostrar "Gerando...").
-  const [carregando, setCarregando] = useState(false);
+  // Estados de carregamento GRANULARES: um para cada ação, evitando que
+  // clicar em "Melhorar plano" também gire o spinner de "Gerar versão final".
+  const [carregandoRascunho, setCarregandoRascunho] = useState(false);
+  const [carregandoMelhorar, setCarregandoMelhorar] = useState(false);
+  const [carregandoFinal, setCarregandoFinal] = useState(false);
 
   // Mensagem de erro vinda da API (ou null).
   const [erro, setErro] = useState<string | null>(null);
+
+  // Tema claro/escuro.
+  const { tema, alternarTema } = useTema();
+
+  // Indica se existe alguma requisição em andamento (usado pelo overlay).
+  const algumCarregamento =
+    carregandoRascunho || carregandoMelhorar || carregandoFinal;
 
   /**
    * Gera o rascunho a partir da descrição e avança para a etapa de revisão.
    */
   async function aoGerarRascunho(descricao: string) {
-    setCarregando(true);
+    setCarregandoRascunho(true);
     setErro(null);
 
     try {
@@ -66,7 +105,7 @@ function App() {
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
-      setCarregando(false);
+      setCarregandoRascunho(false);
     }
   }
 
@@ -76,15 +115,15 @@ function App() {
    */
   async function aoMelhorar(
     rascunhoAtual: PlanoDeAulaRascunho,
-    orientacoes: string,
+    instrucoes: string,
   ) {
-    setCarregando(true);
+    setCarregandoMelhorar(true);
     setErro(null);
 
     try {
       const melhorado = await planoDeAulaServico.melhorarRascunho(
         rascunhoAtual,
-        orientacoes,
+        instrucoes,
       );
       setRascunho(melhorado);
       // Incrementa a versão para o formulário recarregar com o novo rascunho.
@@ -92,7 +131,7 @@ function App() {
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
-      setCarregando(false);
+      setCarregandoMelhorar(false);
     }
   }
 
@@ -100,7 +139,7 @@ function App() {
    * Gera a versão final a partir do rascunho revisado e mostra o relatório.
    */
   async function aoGerarFinal(rascunhoRevisado: PlanoDeAulaRascunho) {
-    setCarregando(true);
+    setCarregandoFinal(true);
     setErro(null);
 
     try {
@@ -112,7 +151,7 @@ function App() {
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Erro inesperado.');
     } finally {
-      setCarregando(false);
+      setCarregandoFinal(false);
     }
   }
 
@@ -126,15 +165,51 @@ function App() {
     setErro(null);
   }
 
+  /**
+   * Volta da tela de revisão para a tela de entrada.
+   */
+  function aoVoltarParaEntrada() {
+    setEtapa('entrada');
+    setRascunho(null);
+    setErro(null);
+  }
+
+  /**
+   * Volta da tela de relatório para a tela de revisão.
+   */
+  function aoVoltarParaFormulario() {
+    setEtapa('formulario');
+    setPlanoFinal(null);
+    setErro(null);
+  }
+
   return (
     <main className="app">
-      <h1>MeuPlano.AI</h1>
+      <header className="app-header">
+        <h1>MeuPlano.AI</h1>
+        <button
+          type="button"
+          className="btn-tema"
+          onClick={alternarTema}
+          title={`Alternar para tema ${tema === 'light' ? 'escuro' : 'claro'}`}
+        >
+          {tema === 'light' ? <LuMoon /> : <LuSun />}
+        </button>
+      </header>
+
+      {/* Overlay de carregamento sobre a tela inteira */}
+      {algumCarregamento && (
+        <div className="overlay-carregando" role="status" aria-live="polite">
+          <div className="spinner-grande" aria-hidden="true" />
+          <p>Processando...</p>
+        </div>
+      )}
 
       {/* Etapa 1: entrada em linguagem natural */}
       {etapa === 'entrada' && (
         <FormularioEntrada
           onGerar={aoGerarRascunho}
-          carregando={carregando}
+          carregando={carregandoRascunho}
           erro={erro}
         />
       )}
@@ -146,7 +221,9 @@ function App() {
           rascunhoInicial={rascunho}
           onGerarFinal={aoGerarFinal}
           onMelhorar={aoMelhorar}
-          carregando={carregando}
+          onVoltar={aoVoltarParaEntrada}
+          carregandoMelhorar={carregandoMelhorar}
+          carregandoFinal={carregandoFinal}
           erro={erro}
         />
       )}
@@ -156,6 +233,7 @@ function App() {
         <VisualizacaoRelatorio
           planoFinal={planoFinal}
           onReiniciar={aoReiniciar}
+          onVoltar={aoVoltarParaFormulario}
         />
       )}
     </main>

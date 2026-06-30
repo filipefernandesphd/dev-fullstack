@@ -8,9 +8,11 @@ dotenv.config({
     path: path.resolve(process.cwd(), `.env.${env}`)
 });
 
+const port = Number(process.env.PORT) ?? 3333;
+
 export const config = {
-    port: Number(process.env.PORT) ?? 3333,
-    urlApi: `http://localhost:${process.env.PORT ?? 3333}`,
+    port,
+    urlApi: process.env.API_URL ?? `http://localhost:${port}`,
     nodeEnv: env,
-    corsOrigin: process.env.CORS_ORIGIN ?? '*',
+    corsOrigin: (process.env.CORS_ORIGIN ?? '*').replace(/^['"]|['"]$/g, ''),
 };

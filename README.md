@@ -51,6 +51,161 @@ Descrição dos principais fluxos do app **MeuPlano.AI**.
 * 7.1. O professor salva o plano de aula e o caso de uso termina.
 * 7.2. O professor exporta o plano de aula como PDF e o caso de uso termina.
 
+## Deploy
+
+A aplicação está hospedada nos seguintes serviços:
+
+| Serviço | URL |
+|---|---|
+| **Frontend (Vercel)** | `https://dev-fullstack-red.vercel.app/` |
+| **Backend (Render)** | `https://dev-fullstack-erot.onrender.com` |
+| **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
+
+## Deploy
+
+A aplicação está hospedada nos seguintes serviços:
+
+| Serviço | URL |
+|---|---|
+| **Frontend (Vercel)** | `https://dev-fullstack-red.vercel.app/` |
+| **Backend (Render)** | `https://dev-fullstack-erot.onrender.com` |
+| **Banco de dados (MongoDB Atlas)** | Cluster `meuplanoai` |
+
+> ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
+
+### Passo a passo do deploy
+
+#### 1. MongoDB Atlas (banco de dados)
+
+1. Acesse [mongodb.com/atlas](https://www.mongodb.com/atlas) e crie uma conta.
+2. Crie um cluster **M0** (gratuito).
+3. Em **Database Access**, crie um usuário com senha.
+4. Em **Network Access**, adicione `0.0.0.0/0` (acesso de qualquer IP).
+5. Em **Clusters → Connect → Drivers → Node.js**, copie a **connection string**.
+6. A string terá o formato:
+   ```
+   mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/meuplanoai?retryWrites=true&w=majority
+   ```
+
+#### 2. Render (backend)
+
+1. Acesse [render.com](https://render.com) e conecte sua conta GitHub.
+2. Crie um novo **Web Service**.
+3. Selecione o repositório e defina:
+   - **Root Directory:** `backend`
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+4. Em **Environment Variables**, adicione:
+   | Variável | Valor |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `PORT` | `10000` (Render ignora e usa a própria) |
+   | `AI_API_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` |
+   | `AI_MODEL` | `gemini-2.5-flash` |
+   | `AI_API_KEY` | `<sua_chave_do_google_ai_studio>` |
+   | `MONGO_URL` | `<connection_string_do_atlas>` |
+   | `CORS_ORIGIN` | `https://<seu_dominio>.vercel.app` |
+5. Clique em **Create Web Service**.
+6. Aguarde o deploy e copie a URL pública (ex: `https://meuplanoai-api.onrender.com`).
+
+> ⚠️ **Importante:** se faltar qualquer variável `AI_*`, o backend **quebra ao iniciar**.
+
+#### 3. Vercel (frontend)
+
+1. Acesse [vercel.com](https://vercel.com) e importe o repositório.
+2. Selecione o diretório `frontend`.
+3. Em **Environment Variables**, adicione:
+   | Variável | Valor |
+   |---|---|
+   | `VITE_API_URL` | `https://<url_do_render>` |
+4. Clique em **Deploy**.
+5. Aguarde o build e copie a URL do domínio.
+
+#### 4. Ajustar CORS
+
+1. Volte ao Render e atualize a variável `CORS_ORIGIN` com o domínio final do Vercel.
+2. Faça **Manual Deploy** no Render para aplicar a mudança.
+
+#### 5. Atualizar README
+
+Substitua os placeholders no topo desta seção pelas URLs reais do Vercel e Render.
+> ⚠️ Substitua os placeholders acima pelos URLs reais após o deploy.
+
+## Tecnologias
+
+- **Frontend:** React + TypeScript + Vite
+- **Backend:** Node.js + TypeScript + Express
+- **IA:** Google Gemini (via API OpenAI-compatible)
+- **Banco de dados:** MongoDB (Mongoose)
+- **Deploy:** Vercel (frontend) + Render (backend) + MongoDB Atlas
+
+## Configuração local
+
+### 1. Clonar e instalar dependências
+
+```bash
+git clone <repo>
+cd dev-fullstack
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+### 2. Configurar variáveis de ambiente
+
+Crie o arquivo `backend/.env.development`:
+
+```env
+NODE_ENV=development
+PORT=3333
+
+AI_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+AI_MODEL=gemini-2.5-flash
+AI_API_KEY=<sua_chave_do_google_ai_studio>
+
+CORS_ORIGIN=*
+MONGO_URL=mongodb://localhost:27017/meuplanoai
+```
+
+> A chave gratuita é obtida em [Google AI Studio](https://aistudio.google.com/).
+
+### 3. Subir MongoDB local (opcional)
+
+```bash
+cd ..
+docker compose up -d mongodb
+```
+
+### 4. Rodar em desenvolvimento
+
+```bash
+# Terminal 1 — backend
+cd backend && npm run dev
+
+# Terminal 2 — frontend
+cd frontend && npm run dev
+```
+
+### 5. Testes
+
+```bash
+cd backend  && npm test && npm run build
+cd frontend && npm test && npm run build
+```
+
+## Variáveis de ambiente (produção)
+
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `AI_API_URL` | URL da API de IA | `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` |
+| `AI_MODEL` | Modelo Gemini | `gemini-2.5-flash` |
+| `AI_API_KEY` | Chave da API Google | `AQ...` |
+| `MONGO_URL` | Connection string MongoDB | `mongodb+srv://...` |
+| `CORS_ORIGIN` | Origem permitida no CORS | `https://dev-fullstack-red.vercel.app/` |
+| `PORT` | Porta do servidor | `3333` (Render injeta automaticamente) |
+* 7.2. O professor exporta o plano de aula como PDF e o caso de uso termina.
+
 ### Fluxo Principal - UC01 - Gerar Plano de Aula
 
 ```mermaid

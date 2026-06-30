@@ -23,6 +23,23 @@
   --sombra: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
+/* === Tema escuro === */
+[data-theme='dark'] {
+  --cor-fundo: #0f172a;
+  --cor-superficie: #1e293b;
+  --cor-texto: #e2e8f0;
+  --cor-texto-suave: #94a3b8;
+  --cor-primaria: #60a5fa;
+  --cor-primaria-escura: #3b82f6;
+  --cor-borda: #334155;
+  --cor-erro: #f87171;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 /* Reset básico: remove margens padrão e usa box-sizing previsível. */
 * {
   box-sizing: border-box;
@@ -45,11 +62,42 @@ body {
   padding: 2rem 1rem 4rem;
 }
 
+/* === Cabeçalho com título e botão de tema === */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 /* Título / marca da aplicação. */
-.app > h1 {
+/* Nota: o seletor mudou de .app > h1 para .app-header h1 porque o h1 agora
+   vive dentro do .app-header, ao lado do botão de troca de tema. */
+.app-header h1 {
   text-align: center;
   color: var(--cor-primaria);
-  margin-bottom: 1.5rem;
+  margin: 0;
+  flex: 1;
+}
+
+/* Botão de troca de tema claro/escuro. */
+.btn-tema {
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  background-color: var(--cor-superficie);
+  border: 1.5px solid var(--cor-borda);
+  border-radius: var(--raio);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-tema:hover {
+  border-color: var(--cor-primaria);
 }
 
 /* "Cartões": o formulário e a seção do relatório. */
@@ -82,7 +130,7 @@ body {
   color: inherit;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  background-color: #fff;
+  background-color: var(--cor-superficie);
 }
 
 /* Destaque ao focar um campo. */
@@ -121,6 +169,22 @@ body {
   cursor: not-allowed;
 }
 
+/* Botão fantasma (voltar / cancelar) — sem fundo, borda discreta. */
+.app button.ghost {
+  background-color: transparent;
+  color: var(--cor-texto-suave);
+  border: 1.5px solid var(--cor-borda);
+}
+
+.app button.ghost:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: var(--cor-texto-suave);
+}
+
+[data-theme='dark'] .app button.ghost:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
 /* Mensagem de erro (elementos com role="alert"). */
 .app [role='alert'] {
   margin-top: 1rem;
@@ -129,6 +193,11 @@ body {
   background-color: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: var(--raio);
+}
+
+[data-theme='dark'] .app [role='alert'] {
+  background-color: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.25);
 }
 
 /* Grupo de botões lado a lado (ex.: "Melhorar plano" e "Gerar versão final"). */
@@ -163,8 +232,206 @@ body {
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: inherit;
-  background-color: #f9fafb;
+  background-color: var(--cor-fundo);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   padding: 1rem;
+}
+
+/* ===== Melhorias de UX (Frente 3) ===== */
+
+/* Spinner de carregamento */
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+/* === Overlay de carregamento sobre a tela inteira === */
+.overlay-carregando {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+.overlay-carregando .spinner-grande {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.overlay-carregando p {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Banner de erro destacado */
+.app .erro-banner {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  color: #991b1b;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid var(--cor-erro);
+  border-radius: var(--raio);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app .erro-banner svg {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+/* Contador de caracteres */
+.contador-caracteres {
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--cor-texto-suave);
+  margin-top: 0.25rem;
+}
+
+.contador-caracteres.limite {
+  color: var(--cor-erro);
+  font-weight: 600;
+}
+
+/* Ações do relatório */
+.app .acoes-relatorio {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.app .acoes-relatorio button {
+  margin-top: 0;
+}
+
+.app .acoes-relatorio button.secondary {
+  background-color: #fff;
+  color: var(--cor-primaria);
+  border: 1.5px solid var(--cor-primaria);
+}
+
+.app .acoes-relatorio button.secondary:hover:not(:disabled) {
+  background-color: #eff6ff;
+}
+
+/* Toast de sucesso (copiar) */
+.toast-sucesso {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: #16a34a;
+  color: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  font-weight: 600;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+/* ===== Layout de impressão ===== */
+@media print {
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+
+  .app {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Esconde elementos que não fazem sentido no papel. */
+  .app-header,
+  .btn-tema,
+  .overlay-carregando,
+  .toast-sucesso,
+  .acoes,
+  .acoes-relatorio {
+    display: none !important;
+  }
+
+  .app form,
+  .app section {
+    background-color: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+
+  .app pre {
+    background-color: #f9fafb !important;
+    border: 1px solid #d1d5db !important;
+    color: #000 !important;
+  }
+
+  .app label {
+    color: #000 !important;
+  }
+
+  .app .relatorio-dados dt {
+    color: #000 !important;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-top: 1.25rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1.5px solid #000;
+    padding-bottom: 0.15rem;
+    page-break-after: avoid;
+  }
+
+  h1, h2, h3 {
+    color: #000 !important;
+  }
+
+  /* Evita quebras desajeitadas no meio de blocos. */
+  .app pre,
+  .app .relatorio-dados dd {
+    break-inside: avoid;
+  }
+}
+
+/* ===== Keyframes (devem ficar no nível raiz) ===== */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
