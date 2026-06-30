@@ -8,8 +8,8 @@ O **MeuPlano.AI** usa Inteligência Artificial para gerar sugestões estruturada
 
 ## URL do App (Produção)
 
-- **Frontend (Vercel):** https://meuplano-ai.vercel.app
-- **Backend (Render):** https://meuplano-ai-backend.onrender.com
+- **Frontend (Vercel):** https://dev-fullstack-meu-plano-ia.vercel.app
+- **Backend (Render):** https://dev-fullstack-meu-plano-ia-2.onrender.com
 
 > ⚠️ O backend no Render free tier "dorme" após inatividade. A primeira requisição pode levar ~30s (cold start).
 
