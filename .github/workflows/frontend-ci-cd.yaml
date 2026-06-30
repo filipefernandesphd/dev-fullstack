@@ -1,6 +1,6 @@
 # Nome do workflow que aparecerá na aba "Actions" do GitHub
 name: Frontend CI/CD
-
+#
 # Define quando o workflow será executado
 on:
   # Executa em qualquer commit enviado para qualquer branch

@@ -17,6 +17,8 @@ import {
   validarComEsquema,
 } from './plano-de-aula.validacao'
 
+import { PlanoFinalModelo } from './plano-final.modelo';// caminho do arquivo que conecta com mongodb
+
 /**
  * Controlador responsável por receber as requisições HTTP relacionadas
  * ao módulo de planos de aula.
@@ -208,6 +210,21 @@ class PlanoDeAulaControlador {
       const planoFinal: PlanoDeAulaFinal =
         await this.planoDeAulaServico.gerarPlanoFinal(rascunho);
 
+      try {
+          /**
+     *  PERSISTÊNCIA NO MONGODB
+     * Salva o objeto gerado pela IA no banco de dados.
+     */
+        const planoSalvo = await PlanoFinalModelo.create({
+        titulo: planoFinal.titulo,
+        plano: planoFinal.plano,
+        relatorio: planoFinal.relatorio,
+        });
+      } catch (error) {
+        console.error(error)
+      }
+  
+      
       return res.status(200).json({
         sucesso: true,
         mensagem: 'Plano de aula final gerado com sucesso.',

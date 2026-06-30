@@ -1,4 +1,5 @@
 # Endpoint HTTP POST para criar um novo plano de aula
+#
 post:
   summary: Gera um rascunho de plano de aula
   description: >
