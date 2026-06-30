@@ -14,6 +14,10 @@ O mono-repositório contém a implementação do app **MeuPlano.AI** e está est
 * **[docs](./docs)**: documentação para gerência e implementação da aplicação;
 * **[frontend](./frontend)**: implementação da interface do usuário;
 
+## link de acesso
+
+https://meu-plano-ai-front.vercel.app/
+
 ## Use Cases
 
 Descrição dos principais fluxos do app **MeuPlano.AI**.
