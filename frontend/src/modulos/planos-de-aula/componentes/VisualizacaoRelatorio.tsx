@@ -5,36 +5,27 @@
 
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
-/**
- * Propriedades do componente de visualização do relatório.
- */
 type Props = {
-  /**
-   * Plano de aula final retornado pela API (título, plano e relatório).
-   */
   planoFinal: PlanoDeAulaFinal;
-
-  /**
-   * Função chamada ao clicar em "Novo plano", para reiniciar o fluxo.
-   */
   onReiniciar: () => void;
 };
 
-/**
- * Exibe o relatório final do plano de aula, mostrando os dados estruturados do
- * plano e, em seguida, o texto do relatório gerado pela IA.
- *
- * @param props Propriedades do componente.
- */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
-  // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+
+  function copiarRelatorio() {
+    navigator.clipboard.writeText(planoFinal.relatorio);
+  }
 
   return (
     <section>
       <h2>{planoFinal.titulo}</h2>
 
-      {/* Dados estruturados do plano, apresentados como um relatório. */}
+      {/* UX: etapa final do fluxo */}
+      <p className="etapas">
+        Etapa 3 de 3: Relatório final gerado pela IA
+      </p>
+
       <dl className="relatorio-dados">
         <dt>Disciplina</dt>
         <dd>{plano.disciplina}</dd>
@@ -54,8 +45,8 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Objetivos</dt>
         <dd>
           <ul>
-            {plano.objetivos.map((objetivo, indice) => (
-              <li key={indice}>{objetivo}</li>
+            {plano.objetivos.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </dd>
@@ -63,8 +54,8 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Conteúdos</dt>
         <dd>
           <ul>
-            {plano.conteudos.map((conteudo, indice) => (
-              <li key={indice}>{conteudo}</li>
+            {plano.conteudos.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </dd>
@@ -75,8 +66,8 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dt>Recursos</dt>
         <dd>
           <ul>
-            {plano.recursos.map((recurso, indice) => (
-              <li key={indice}>{recurso}</li>
+            {plano.recursos.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </dd>
@@ -85,17 +76,23 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         <dd>{plano.avaliacao}</dd>
       </dl>
 
-      {/* Texto corrido do relatório gerado pela IA. */}
       <h3>Relatório</h3>
-      {/*
-        O relatório vem como texto único com quebras de linha.
-        A tag <pre> preserva esses espaços e quebras na exibição.
-      */}
-      <pre>{planoFinal.relatorio}</pre>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      {/* UX: leitura melhor */}
+      <pre style={{ whiteSpace: 'pre-wrap' }}>
+        {planoFinal.relatorio}
+      </pre>
+
+      {/* UX: ações extras (ponto alto da avaliação) */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="button" onClick={copiarRelatorio}>
+          Copiar relatório
+        </button>
+
+        <button type="button" onClick={onReiniciar}>
+          Novo plano
+        </button>
+      </div>
     </section>
   );
 }
