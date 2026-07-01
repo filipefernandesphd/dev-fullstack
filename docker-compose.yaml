@@ -12,6 +12,8 @@ services:
       - /app/node_modules
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/meuplanoai
     env_file:
       - ./backend/.env.development
 
@@ -31,6 +33,17 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+
+  # Banco de dados MongoDB (desenvolvimento)
+  mongodb:
+    container_name: mongodb
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: meuplanoai
 
   # Serviço do frontend (desenvolvimento)
   frontend-dev:
@@ -59,4 +72,5 @@ services:
       - ./frontend/.env.development           # injeta variaveis dentro do ambiente
 
 volumes:
-  ollama_data: 
+  ollama_data:
+  mongodb_data: 

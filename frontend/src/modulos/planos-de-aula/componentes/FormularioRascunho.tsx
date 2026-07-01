@@ -4,7 +4,7 @@
 // preenchidos automaticamente; o professor revisa/edita e submete para gerar a
 // versão final.
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 
 import type { PlanoDeAulaRascunho } from '../plano-de-aula.tipos';
 
@@ -72,6 +72,11 @@ function FormularioRascunho({
   // Estado local com uma cópia editável do rascunho recebido.
   const [rascunho, setRascunho] = useState<PlanoDeAulaRascunho>(rascunhoInicial);
 
+  // Sincroniza o estado local quando o rascunho inicial mudar (ex.: após melhoria pela IA).
+  useEffect(() => {
+    setRascunho(rascunhoInicial);
+  }, [rascunhoInicial]);
+
   // Orientações adicionais que o professor pode informar para melhorar o plano.
   const [orientacoes, setOrientacoes] = useState('');
 
@@ -109,103 +114,127 @@ function FormularioRascunho({
   }
 
   return (
-    <form onSubmit={aoEnviar}>
+    <form onSubmit={aoEnviar} className="formulario-card">
       <h2>Revise o rascunho</h2>
 
-      <label htmlFor="titulo">Título</label>
-      <input
-        id="titulo"
-        value={rascunho.titulo}
-        onChange={(e) => atualizarTexto('titulo', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="titulo">Título</label>
+        <input
+          id="titulo"
+          value={rascunho.titulo}
+          onChange={(e) => atualizarTexto('titulo', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="disciplina">Disciplina</label>
-      <input
-        id="disciplina"
-        value={rascunho.disciplina}
-        onChange={(e) => atualizarTexto('disciplina', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="disciplina">Disciplina</label>
+        <input
+          id="disciplina"
+          value={rascunho.disciplina}
+          onChange={(e) => atualizarTexto('disciplina', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="curso">Curso</label>
-      <input
-        id="curso"
-        value={rascunho.curso}
-        onChange={(e) => atualizarTexto('curso', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="curso">Curso</label>
+        <input
+          id="curso"
+          value={rascunho.curso}
+          onChange={(e) => atualizarTexto('curso', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="nivel">Nível</label>
-      <input
-        id="nivel"
-        value={rascunho.nivel}
-        onChange={(e) => atualizarTexto('nivel', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="nivel">Nível</label>
+        <input
+          id="nivel"
+          value={rascunho.nivel}
+          onChange={(e) => atualizarTexto('nivel', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="duracao">Duração</label>
-      <input
-        id="duracao"
-        value={rascunho.duracao}
-        onChange={(e) => atualizarTexto('duracao', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="duracao">Duração</label>
+        <input
+          id="duracao"
+          value={rascunho.duracao}
+          onChange={(e) => atualizarTexto('duracao', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="tema">Tema</label>
-      <input
-        id="tema"
-        value={rascunho.tema}
-        onChange={(e) => atualizarTexto('tema', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="tema">Tema</label>
+        <input
+          id="tema"
+          value={rascunho.tema}
+          onChange={(e) => atualizarTexto('tema', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="objetivos">Objetivos (um por linha)</label>
-      <textarea
-        id="objetivos"
-        rows={3}
-        value={rascunho.objetivos.join('\n')}
-        onChange={(e) => atualizarLista('objetivos', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="objetivos">Objetivos (um por linha)</label>
+        <textarea
+          id="objetivos"
+          rows={3}
+          value={rascunho.objetivos.join('\n')}
+          onChange={(e) => atualizarLista('objetivos', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="conteudos">Conteúdos (um por linha)</label>
-      <textarea
-        id="conteudos"
-        rows={3}
-        value={rascunho.conteudos.join('\n')}
-        onChange={(e) => atualizarLista('conteudos', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="conteudos">Conteúdos (um por linha)</label>
+        <textarea
+          id="conteudos"
+          rows={3}
+          value={rascunho.conteudos.join('\n')}
+          onChange={(e) => atualizarLista('conteudos', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="metodologia">Metodologia</label>
-      <textarea
-        id="metodologia"
-        rows={2}
-        value={rascunho.metodologia}
-        onChange={(e) => atualizarTexto('metodologia', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="metodologia">Metodologia</label>
+        <textarea
+          id="metodologia"
+          rows={2}
+          value={rascunho.metodologia}
+          onChange={(e) => atualizarTexto('metodologia', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="recursos">Recursos (um por linha)</label>
-      <textarea
-        id="recursos"
-        rows={3}
-        value={rascunho.recursos.join('\n')}
-        onChange={(e) => atualizarLista('recursos', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="recursos">Recursos (um por linha)</label>
+        <textarea
+          id="recursos"
+          rows={3}
+          value={rascunho.recursos.join('\n')}
+          onChange={(e) => atualizarLista('recursos', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="avaliacao">Avaliação</label>
-      <textarea
-        id="avaliacao"
-        rows={2}
-        value={rascunho.avaliacao}
-        onChange={(e) => atualizarTexto('avaliacao', e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="avaliacao">Avaliação</label>
+        <textarea
+          id="avaliacao"
+          rows={2}
+          value={rascunho.avaliacao}
+          onChange={(e) => atualizarTexto('avaliacao', e.target.value)}
+        />
+      </div>
 
-      <label htmlFor="orientacoes">
-        Orientações para melhorar o plano (opcional)
-      </label>
-      <textarea
-        id="orientacoes"
-        rows={2}
-        value={orientacoes}
-        placeholder="Ex.: Deixe a metodologia mais ativa e inclua uma atividade em grupo."
-        onChange={(e) => setOrientacoes(e.target.value)}
-      />
+      <div className="campo-grupo">
+        <label htmlFor="orientacoes">
+          Orientações para melhorar o plano (opcional)
+        </label>
+        <textarea
+          id="orientacoes"
+          rows={2}
+          value={orientacoes}
+          placeholder="Ex.: Deixe a metodologia mais ativa e inclua uma atividade em grupo."
+          onChange={(e) => setOrientacoes(e.target.value)}
+        />
+      </div>
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && <p role="alert" className="erro-banner">{erro}</p>}
 
       {/*
         Dois botões:
@@ -214,12 +243,35 @@ function FormularioRascunho({
         - "Gerar versão final" (type="submit"): avança para o relatório final.
       */}
       <div className="acoes">
-        <button type="button" onClick={aoMelhorar} disabled={carregando}>
-          {carregando ? 'Processando...' : 'Melhorar plano'}
+        <button
+          type="button"
+          onClick={aoMelhorar}
+          disabled={carregando}
+          className={carregando ? 'botao-carregando' : ''}
+        >
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Processando...
+            </>
+          ) : (
+            'Melhorar plano'
+          )}
         </button>
 
-        <button type="submit" disabled={carregando}>
-          {carregando ? 'Processando...' : 'Gerar versão final'}
+        <button
+          type="submit"
+          disabled={carregando}
+          className={carregando ? 'botao-carregando' : ''}
+        >
+          {carregando ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Processando...
+            </>
+          ) : (
+            'Gerar versão final'
+          )}
         </button>
       </div>
     </form>

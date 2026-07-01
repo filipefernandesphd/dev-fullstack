@@ -1,184 +1,359 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* ===========================================================
+   App.css — Estilos do componente principal e do layout global
+   =========================================================== */
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+/* ─── Layout principal ─── */
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  text-align: center;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+.subtitulo {
+  margin-bottom: 32px;
 }
 
-#center {
+/* ─── Indicador de etapas ─── */
+
+.indicador-etapas {
   display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+  margin-bottom: 40px;
+  padding: 16px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.etapa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.5;
+  transition: opacity 0.3s;
 }
 
-.ticks {
-  position: relative;
+.etapa-atual {
+  opacity: 1;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.etapa-concluida {
+  opacity: 0.8;
+  color: var(--success);
+}
+
+.etapa-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text);
+  transition: all 0.3s;
+}
+
+.etapa-atual .etapa-numero {
+  background: var(--accent);
+  color: #fff;
+}
+
+.etapa-concluida .etapa-numero {
+  background: var(--success);
+  color: #fff;
+}
+
+.etapa-separador {
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+  margin-left: 8px;
+}
+
+/* ─── Card de formulário ─── */
+
+.formulario-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: left;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.formulario-card h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+/* ─── Grupo de campos ─── */
+
+.campo-grupo {
+  margin-bottom: 20px;
+}
+
+.campo-grupo label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 6px;
+}
+
+.campo-grupo input,
+.campo-grupo textarea {
   width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--sans);
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+.campo-grupo input:focus,
+.campo-grupo textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.campo-grupo textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.campo-invalido {
+  border-color: var(--danger) !important;
+}
+
+.campo-grupo small {
+  display: block;
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.contador-alerta {
+  color: var(--danger) !important;
+  font-weight: 500;
+}
+
+/* ─── Botões ─── */
+
+button {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button[type="submit"],
+.botao-primario {
+  background: var(--accent);
+  color: #fff;
+}
+
+button[type="submit"]:hover:not(:disabled),
+.botao-primario:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.botao-secundario {
+  background: var(--social-bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.botao-secundario:hover:not(:disabled) {
+  background: var(--border);
+}
+
+/* ─── Spinner de carregamento ─── */
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar 0.6s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.botao-carregando {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botao-secundario .spinner {
+  border-color: rgba(0, 0, 0, 0.15);
+  border-top-color: var(--text-h);
+}
+
+/* ─── Ações (grupo de botões) ─── */
+
+.acoes {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* ─── Banner de erro ─── */
+
+.erro-banner {
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--danger);
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+/* ─── Relatório ─── */
+
+.relatorio-container {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.relatorio-dados {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.relatorio-dados dt {
+  font-weight: 600;
+  color: var(--text-h);
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.relatorio-dados dt:first-child {
+  margin-top: 0;
+}
+
+.relatorio-dados dd {
+  margin: 4px 0 0 0;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.relatorio-dados ul {
+  margin: 4px 0 0 0;
+  padding-left: 20px;
+}
+
+.relatorio-dados li {
+  margin-bottom: 2px;
+}
+
+.relatorio-texto {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--text);
+}
+
+.acoes-relatorio {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* ─── Responsividade ─── */
+
+@media (max-width: 640px) {
+  main {
+    padding: 20px 16px;
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  .formulario-card {
+    padding: 20px;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .indicador-etapas {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+  }
+
+  .etapa-separador {
+    display: none;
+  }
+
+  .acoes {
+    flex-direction: column;
+  }
+
+  .acoes button {
+    width: 100%;
+  }
+
+  .acoes-relatorio {
+    flex-direction: column;
+  }
+
+  .acoes-relatorio button {
+    width: 100%;
   }
 }

@@ -1,170 +1,128 @@
-/*
-  index.css: estilos globais da aplicação.
-
-  Objetivo: dar ao frontend uma aparência padrão de webapp (layout centralizado,
-  tipografia legível, "cartões", formulários e botões), sem usar bibliotecas de
-  estilo — apenas CSS puro, para manter o exemplo simples e didático.
-
-  A estilização é feita principalmente por seletores de elemento, evitando poluir
-  os componentes React com muitas classes.
-*/
-
-/* Variáveis de cor e medidas reutilizáveis (custom properties do CSS). */
 :root {
-  --cor-fundo: #f3f4f6;
-  --cor-superficie: #ffffff;
-  --cor-texto: #1f2937;
-  --cor-texto-suave: #6b7280;
-  --cor-primaria: #2563eb;
-  --cor-primaria-escura: #1d4ed8;
-  --cor-borda: #d1d5db;
-  --cor-erro: #dc2626;
-  --raio: 8px;
-  --sombra: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --card-bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-hover: #9228e8;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --success: #22c55e;
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
 }
 
-/* Reset básico: remove margens padrão e usa box-sizing previsível. */
-* {
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --card-bg: #1f2028;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #c084fc;
+    --accent-hover: #a855f7;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --social-bg: rgba(47, 48, 58, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  }
+
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  /* Pilha de fontes do sistema (mesma usada pela maioria dos webapps). */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
-  background-color: var(--cor-fundo);
-  color: var(--cor-texto);
-  line-height: 1.5;
 }
 
-/* Container principal: largura máxima e centralizado na página. */
-.app {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
 }
 
-/* Título / marca da aplicação. */
-.app > h1 {
-  text-align: center;
-  color: var(--cor-primaria);
-  margin-bottom: 1.5rem;
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
 }
 
-/* "Cartões": o formulário e a seção do relatório. */
-.app form,
-.app section {
-  background-color: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra);
-  padding: 1.5rem;
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
 }
 
-.app h2 {
-  margin-top: 0;
+h3 {
+  font-family: var(--heading);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0 0 12px;
 }
 
-/* Rótulos dos campos. */
-.app label {
-  display: block;
-  font-weight: 600;
-  margin: 1rem 0 0.35rem;
-}
-
-/* Campos de entrada. */
-.app input,
-.app textarea {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  font: inherit;
-  color: inherit;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  background-color: #fff;
-}
-
-/* Destaque ao focar um campo. */
-.app input:focus,
-.app textarea:focus {
-  outline: none;
-  border-color: var(--cor-primaria);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.app textarea {
-  resize: vertical;
-}
-
-/* Botões. */
-.app button {
-  margin-top: 1.5rem;
-  padding: 0.7rem 1.25rem;
-  font: inherit;
-  font-weight: 600;
-  color: #fff;
-  background-color: var(--cor-primaria);
-  border: none;
-  border-radius: var(--raio);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.app button:hover:not(:disabled) {
-  background-color: var(--cor-primaria-escura);
-}
-
-/* Botão desabilitado (durante o carregamento). */
-.app button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Mensagem de erro (elementos com role="alert"). */
-.app [role='alert'] {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  color: var(--cor-erro);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--raio);
-}
-
-/* Grupo de botões lado a lado (ex.: "Melhorar plano" e "Gerar versão final"). */
-.app .acoes {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/* Lista de dados do relatório (rótulo + valor). */
-.app .relatorio-dados {
+p {
   margin: 0;
 }
 
-.app .relatorio-dados dt {
-  font-weight: 600;
-  color: var(--cor-texto-suave);
-  margin-top: 1rem;
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
 }
 
-.app .relatorio-dados dd {
-  margin: 0.15rem 0 0;
-}
-
-.app .relatorio-dados ul {
-  margin: 0.15rem 0 0;
-  padding-left: 1.25rem;
-}
-
-/* Relatório final: preserva quebras de linha e quebra palavras longas. */
-.app pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: inherit;
-  background-color: #f9fafb;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  padding: 1rem;
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
 }

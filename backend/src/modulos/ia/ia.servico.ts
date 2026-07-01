@@ -79,6 +79,107 @@ class IaServico {
     * @throws Error Caso a API de IA retorne erro HTTP.
     * @throws Error Caso a resposta da IA venha vazia ou em formato inesperado.
     */
+    /**
+     * Envia uma requisição para o provedor de IA com controle de timeout.
+     *
+     * Separa o fetch do tratamento de erros para manter o método principal
+     * mais limpo e permitir reúso em diferentes cenários.
+     *
+     * @param corpoRequisicao Corpo da requisição no formato Chat Completions.
+     * @returns Resposta HTTP do provedor de IA.
+     *
+     * @throws Error Caso ocorra timeout ou erro de rede.
+     */
+    private async enviarRequisicao(
+        corpoRequisicao: RequisicaoIa,
+    ): Promise<Response> {
+        /**
+         * Controlador de timeout: aborta a requisição após 30 segundos.
+         */
+        const controleAbort = new AbortController();
+        const timeoutId = setTimeout(() => controleAbort.abort(), 30000);
+
+        try {
+            const resposta = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    /**
+                     * Informa que estamos enviando JSON no corpo da requisição.
+                     */
+                    'Content-Type': 'application/json',
+
+                    /**
+                     * Envia a chave no formato Bearer Token.
+                     *
+                     * Mesmo quando usamos Ollama local com chave fictícia,
+                     * manter esse cabeçalho simula uma API real.
+                     */
+                    Authorization: `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify(corpoRequisicao),
+                signal: controleAbort.signal,
+            });
+
+            return resposta;
+        } catch (erro) {
+            if (erro instanceof DOMException && erro.name === 'AbortError') {
+                throw new Error(
+                    'O serviço de IA não respondeu dentro do tempo limite (30 segundos). ' +
+                    'Verifique sua conexão com a internet e tente novamente.',
+                );
+            }
+
+            throw new Error(
+                'Erro de conexão com o serviço de IA. ' +
+                'Verifique sua conexão com a internet e tente novamente.',
+            );
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
+    /**
+     * Converte erros HTTP do provedor de IA em mensagens amigáveis.
+     *
+     * Cada código de status recebe uma mensagem específica para que o professor
+     * entenda o que aconteceu sem precisar ver detalhes técnicos.
+     *
+     * @param status Código HTTP retornado pelo provedor.
+     * @param corpoErro Corpo da resposta de erro (texto).
+     *
+     * @throws Error Com mensagem adaptada ao tipo de erro.
+     */
+    private tratarErroHttp(status: number, corpoErro: string): never {
+        /**
+         * Tenta extrair detalhes do corpo do erro (ex.: quota exceeded do Gemini).
+         * Se conseguir, enriquece a mensagem padrão com essas informações.
+         */
+        let detalheExtra = '';
+        try {
+            const erroJson = JSON.parse(corpoErro);
+            if (erroJson?.error?.message) {
+                detalheExtra = erroJson.error.message;
+            }
+        } catch {
+            // Corpo não é JSON — usa a mensagem padrão mesmo.
+        }
+
+        const mensagensPorStatus: Record<number, string> = {
+            400: 'A requisição enviada para o serviço de IA é inválida. Verifique as configurações (AI_API_URL, AI_MODEL).',
+            401: 'Chave de API do serviço de IA inválida ou não autorizada. Verifique a variável AI_API_KEY.',
+            403: 'Acesso negado pelo serviço de IA. Verifique se a chave (AI_API_KEY) tem permissão para usar o modelo configurado.',
+            429: 'Cota do serviço de IA excedida. ' +
+                (detalheExtra || 'Aguarde alguns instantes e tente novamente. ' +
+                'Se o problema persistir, crie uma nova chave em https://aistudio.google.com/apikey'),
+        };
+
+        const mensagem =
+            mensagensPorStatus[status] ||
+            `Erro ao chamar serviço de IA. Status: ${status}. Detalhes: ${corpoErro}`;
+
+        throw new Error(mensagem);
+    }
+
     async gerarTexto(prompt: string): Promise<string> {
         const corpoRequisicao: RequisicaoIa = {
             model: this.modelo,
@@ -96,31 +197,11 @@ class IaServico {
             ],
         };
 
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
-
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
+        const resposta = await this.enviarRequisicao(corpoRequisicao);
 
         if (!resposta.ok) {
             const corpoErro = await resposta.text();
-
-            throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
-            );
+            this.tratarErroHttp(resposta.status, corpoErro);
         }
 
         const corpo = (await resposta.json()) as RespostaIa;

@@ -43,6 +43,8 @@ ENV NODE_ENV=production
 
 RUN npm install --omit=dev
 
+# Copia o código compilado e a documentação OpenAPI
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/docs ./docs
 
 CMD ["npm", "start"]

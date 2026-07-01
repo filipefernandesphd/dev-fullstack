@@ -1,5 +1,7 @@
 import { IaServico } from "../ia/ia.servico";
 
+import { salvarPlanoFinal } from "./plano-de-aula.repositorio";
+
 import {
     criarPromptGerarPlanoFinal,
     criarPromptGerarRascunho,
@@ -152,6 +154,19 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+
+        /**
+         * Persiste o plano final no MongoDB APÓS a IA gerar com sucesso.
+         *
+         * A persistência é não-fatal: se MONGO_URL não existir ou a gravação
+         * falhar, apenas registra o erro e segue — sem derrubar a requisição.
+         *
+         * Isso garante que:
+         * - O contrato da API (resposta com { sucesso, mensagem, dados })
+         *   permanece idêntico ao esperado pelos testes.
+         * - O documento do Mongoose (_id, __v) NUNCA vai parar no campo "dados".
+         */
+        await salvarPlanoFinal(planoFinal);
 
         return planoFinal;
     }

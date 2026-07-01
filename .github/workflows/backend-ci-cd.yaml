@@ -11,11 +11,19 @@ on:
 
 env:
     NODE_VERSION: 22
+    MONGO_URL: mongodb://localhost:27017/meuplanoai
 
 jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+        services:
+            mongodb:
+                image: mongo:7
+                ports:
+                    - 27017:27017
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4

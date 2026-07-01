@@ -3,6 +3,8 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
+
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
@@ -27,11 +29,38 @@ type Props = {
  * @param props Propriedades do componente.
  */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
+  // Estado para feedback visual ao copiar o relatório.
+  const [copiado, setCopiado] = useState(false);
+
   // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
 
+  /**
+   * Copia o texto do relatório para a área de transferência.
+   * Exibe feedback visual por 2 segundos.
+   */
+  async function copiarRelatorio() {
+    try {
+      await navigator.clipboard.writeText(planoFinal.relatorio);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Fallback para navegadores sem suporte à API clipboard.
+      const areaTexto = document.createElement('textarea');
+      areaTexto.value = planoFinal.relatorio;
+      areaTexto.style.position = 'fixed';
+      areaTexto.style.opacity = '0';
+      document.body.appendChild(areaTexto);
+      areaTexto.select();
+      document.execCommand('copy');
+      document.body.removeChild(areaTexto);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    }
+  }
+
   return (
-    <section>
+    <section className="relatorio-container">
       <h2>{planoFinal.titulo}</h2>
 
       {/* Dados estruturados do plano, apresentados como um relatório. */}
@@ -91,11 +120,17 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         O relatório vem como texto único com quebras de linha.
         A tag <pre> preserva esses espaços e quebras na exibição.
       */}
-      <pre>{planoFinal.relatorio}</pre>
+      <pre className="relatorio-texto">{planoFinal.relatorio}</pre>
 
-      <button type="button" onClick={onReiniciar}>
-        Novo plano
-      </button>
+      <div className="acoes-relatorio">
+        <button type="button" onClick={copiarRelatorio} className="botao-secundario">
+          {copiado ? 'Copiado!' : 'Copiar relatório'}
+        </button>
+
+        <button type="button" onClick={onReiniciar} className="botao-primario">
+          Novo plano
+        </button>
+      </div>
     </section>
   );
 }

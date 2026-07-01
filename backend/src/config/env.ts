@@ -13,4 +13,5 @@ export const config = {
     urlApi: `http://localhost:${process.env.PORT ?? 3333}`,
     nodeEnv: env,
     corsOrigin: process.env.CORS_ORIGIN ?? '*',
+    mongoUrl: process.env.MONGO_URL || '',
 };

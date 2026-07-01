@@ -1,80 +1,93 @@
-// App.tsx: componente raiz que ORQUESTRA o fluxo principal.
+// App.tsx: componente principal que orquestra o fluxo completo do MeuPlano.AI.
 //
-// Etapas (espelham o caso de uso):
-//   entrada    -> professor descreve a aula (passos 1-3)
-//   formulario -> revisa o rascunho preenchido (passos 4-6)
-//   relatorio  -> vê o plano final (passo 7)
-//
-// O App não conhece detalhes de HTTP: ele apenas chama o serviço
-// (plano-de-aula.servico) e controla qual tela mostrar conforme o estado.
+// Etapas do fluxo principal (UC01):
+//   1. Entrada: professor descreve a aula em linguagem natural.
+//   2. Revisão: sistema exibe formulário com campos preenchidos pela IA.
+//   3. Relatório: sistema exibe versão final do plano de aula.
 
 import { useState } from 'react';
 
-// Instância pronta do cliente HTTP (camada de serviço).
-import { planoDeAulaServico } from './modulos/planos-de-aula/plano-de-aula.servico';
-
-// Tipos do domínio.
-import type {
-  PlanoDeAulaRascunho,
-  PlanoDeAulaFinal,
-} from './modulos/planos-de-aula/plano-de-aula.tipos';
-
-// Componentes de cada etapa.
 import FormularioEntrada from './modulos/planos-de-aula/componentes/FormularioEntrada';
 import FormularioRascunho from './modulos/planos-de-aula/componentes/FormularioRascunho';
 import VisualizacaoRelatorio from './modulos/planos-de-aula/componentes/VisualizacaoRelatorio';
 
+import { planoDeAulaServico } from './modulos/planos-de-aula/plano-de-aula.servico';
+import type { PlanoDeAulaRascunho, PlanoDeAulaFinal } from './modulos/planos-de-aula/plano-de-aula.tipos';
+
+import './App.css';
+
 /**
  * Etapas possíveis do fluxo principal.
  */
-type Etapa = 'entrada' | 'formulario' | 'relatorio';
+type Etapa = 'entrada' | 'rascunho' | 'relatorio';
 
 /**
- * Componente raiz da aplicação MeuPlano.AI.
+ * Configuração do indicador de etapas.
+ * Cada etapa tem um rótulo e um índice para exibição visual.
+ */
+const ETAPAS: Array<{ chave: Etapa; rotulo: string; indice: number }> = [
+  { chave: 'entrada', rotulo: 'Descrição', indice: 1 },
+  { chave: 'rascunho', rotulo: 'Revisão', indice: 2 },
+  { chave: 'relatorio', rotulo: 'Relatório', indice: 3 },
+];
+
+/**
+ * Componente principal da aplicação MeuPlano.AI.
+ *
+ * Gerencia o estado global da aplicação: em qual etapa estamos,
+ * qual o rascunho atual, o plano final, estado de carregamento e erros.
  */
 function App() {
-  // Etapa atual do fluxo.
+  // Etapa atual do fluxo
   const [etapa, setEtapa] = useState<Etapa>('entrada');
 
-  // Rascunho gerado pela IA (disponível a partir da etapa "formulario").
+  // Rascunho atual do plano de aula (gerado ou melhorado pela IA)
   const [rascunho, setRascunho] = useState<PlanoDeAulaRascunho | null>(null);
 
-  // Versão do rascunho: muda a cada melhoria para forçar o formulário a
-  // recarregar os campos com o novo conteúdo (via prop "key").
-  const [versaoRascunho, setVersaoRascunho] = useState(0);
-
-  // Plano final (disponível na etapa "relatorio").
+  // Plano de aula final (gerado na última etapa)
   const [planoFinal, setPlanoFinal] = useState<PlanoDeAulaFinal | null>(null);
 
-  // Indica requisição em andamento (para desabilitar botões / mostrar "Gerando...").
+  // Indica se uma requisição está em andamento
   const [carregando, setCarregando] = useState(false);
 
-  // Mensagem de erro vinda da API (ou null).
+  // Mensagem de erro para exibir ao usuário
   const [erro, setErro] = useState<string | null>(null);
 
   /**
-   * Gera o rascunho a partir da descrição e avança para a etapa de revisão.
+   * Gera o primeiro rascunho a partir da descrição em linguagem natural.
+   *
+   * Passos 2-4 do UC01.
+   *
+   * @param descricao Descrição da aula informada pelo professor.
    */
-  async function aoGerarRascunho(descricao: string) {
+  async function gerarRascunho(descricao: string) {
     setCarregando(true);
     setErro(null);
 
     try {
-      const resultado = await planoDeAulaServico.gerarRascunho(descricao);
-      setRascunho(resultado);
-      setEtapa('formulario');
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro inesperado.');
+      const rascunhoGerado = await planoDeAulaServico.gerarRascunho(descricao);
+      setRascunho(rascunhoGerado);
+      setEtapa('rascunho');
+    } catch (erroCapturado) {
+      const mensagem =
+        erroCapturado instanceof Error
+          ? erroCapturado.message
+          : 'Erro ao gerar o rascunho do plano de aula.';
+      setErro(mensagem);
     } finally {
       setCarregando(false);
     }
   }
 
   /**
-   * Melhora o rascunho atual usando as orientações do professor, permanecendo
-   * na etapa de revisão (com os campos atualizados).
+   * Melhora o rascunho atual com base nas orientações adicionais do professor.
+   *
+   * Passo 5.2 do UC01 (fluxo alternativo).
+   *
+   * @param rascunhoAtual Rascunho atual do plano de aula.
+   * @param orientacoes Orientações para melhoria.
    */
-  async function aoMelhorar(
+  async function melhorarRascunho(
     rascunhoAtual: PlanoDeAulaRascunho,
     orientacoes: string,
   ) {
@@ -82,80 +95,115 @@ function App() {
     setErro(null);
 
     try {
-      const melhorado = await planoDeAulaServico.melhorarRascunho(
+      const rascunhoMelhorado = await planoDeAulaServico.melhorarRascunho(
         rascunhoAtual,
         orientacoes,
       );
-      setRascunho(melhorado);
-      // Incrementa a versão para o formulário recarregar com o novo rascunho.
-      setVersaoRascunho((versao) => versao + 1);
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro inesperado.');
+      setRascunho(rascunhoMelhorado);
+    } catch (erroCapturado) {
+      const mensagem =
+        erroCapturado instanceof Error
+          ? erroCapturado.message
+          : 'Erro ao melhorar o rascunho do plano de aula.';
+      setErro(mensagem);
     } finally {
       setCarregando(false);
     }
   }
 
   /**
-   * Gera a versão final a partir do rascunho revisado e mostra o relatório.
+   * Gera a versão final do plano de aula a partir do rascunho revisado.
+   *
+   * Passos 6-7 do UC01.
+   *
+   * @param rascunhoRevisado Rascunho revisado pelo professor.
    */
-  async function aoGerarFinal(rascunhoRevisado: PlanoDeAulaRascunho) {
+  async function gerarPlanoFinal(rascunhoRevisado: PlanoDeAulaRascunho) {
     setCarregando(true);
     setErro(null);
 
     try {
-      const resultado = await planoDeAulaServico.gerarPlanoFinal(
-        rascunhoRevisado,
-      );
-      setPlanoFinal(resultado);
+      const planoFinalGerado =
+        await planoDeAulaServico.gerarPlanoFinal(rascunhoRevisado);
+      setPlanoFinal(planoFinalGerado);
       setEtapa('relatorio');
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Erro inesperado.');
+    } catch (erroCapturado) {
+      const mensagem =
+        erroCapturado instanceof Error
+          ? erroCapturado.message
+          : 'Erro ao gerar a versão final do plano de aula.';
+      setErro(mensagem);
     } finally {
       setCarregando(false);
     }
   }
 
   /**
-   * Reinicia o fluxo, voltando à tela inicial.
+   * Reinicia o fluxo para gerar um novo plano de aula.
    */
-  function aoReiniciar() {
+  function reiniciar() {
     setEtapa('entrada');
     setRascunho(null);
     setPlanoFinal(null);
     setErro(null);
+    setCarregando(false);
   }
 
   return (
-    <main className="app">
+    <main>
       <h1>MeuPlano.AI</h1>
+      <p className="subtitulo">Gerador de planos de aula com Inteligência Artificial.</p>
 
-      {/* Etapa 1: entrada em linguagem natural */}
+      {/* Indicador visual de etapas do fluxo */}
+      <nav className="indicador-etapas" aria-label="Progresso">
+        {ETAPAS.map((etapaAtual) => {
+          const indiceEtapaAtual = ETAPAS.findIndex((e) => e.chave === etapa);
+          const isConcluida = etapaAtual.indice <= indiceEtapaAtual + 1 && etapa !== etapaAtual.chave;
+          const isAtual = etapaAtual.chave === etapa;
+
+          return (
+            <span
+              key={etapaAtual.chave}
+              className={[
+                'etapa',
+                isConcluida ? 'etapa-concluida' : '',
+                isAtual ? 'etapa-atual' : '',
+              ].filter(Boolean).join(' ')}
+              aria-current={isAtual ? 'step' : undefined}
+            >
+              <span className="etapa-numero">{etapaAtual.indice}</span>
+              <span className="etapa-rotulo">{etapaAtual.rotulo}</span>
+              {etapaAtual.indice < ETAPAS.length && (
+                <span className="etapa-separador" aria-hidden="true" />
+              )}
+            </span>
+          );
+        })}
+      </nav>
+
+      {/* Exibe a etapa atual conforme o estado do fluxo */}
       {etapa === 'entrada' && (
         <FormularioEntrada
-          onGerar={aoGerarRascunho}
+          onGerar={gerarRascunho}
           carregando={carregando}
           erro={erro}
         />
       )}
 
-      {/* Etapa 2: revisão do rascunho */}
-      {etapa === 'formulario' && rascunho && (
+      {etapa === 'rascunho' && rascunho && (
         <FormularioRascunho
-          key={versaoRascunho}
           rascunhoInicial={rascunho}
-          onGerarFinal={aoGerarFinal}
-          onMelhorar={aoMelhorar}
+          onGerarFinal={gerarPlanoFinal}
+          onMelhorar={melhorarRascunho}
           carregando={carregando}
           erro={erro}
         />
       )}
 
-      {/* Etapa 3: relatório final */}
       {etapa === 'relatorio' && planoFinal && (
         <VisualizacaoRelatorio
           planoFinal={planoFinal}
-          onReiniciar={aoReiniciar}
+          onReiniciar={reiniciar}
         />
       )}
     </main>
