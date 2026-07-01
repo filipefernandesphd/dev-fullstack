@@ -23,6 +23,9 @@ services:
       target: test
     env_file:
       - ./backend/.env.development
+    # Informa ao Docker que o backend depende do banco subir primeiro
+    depends_on:
+      - mongodb
 
   ollama:
     container_name: ollama
@@ -31,6 +34,17 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+
+  # =========================================================
+  # CRITÉRIO 6.2: SERVIÇO MONGODB ADICIONADO PARA AMBIENTE DEV
+  # =========================================================
+  mongodb:
+    image: mongo:6.0
+    container_name: meuplano-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
   # Serviço do frontend (desenvolvimento)
   frontend-dev:
@@ -60,3 +74,5 @@ services:
 
 volumes:
   ollama_data: 
+  # Volume criado para persistir os dados do Mongo localmente e não perder suas coleções
+  mongo_data:
