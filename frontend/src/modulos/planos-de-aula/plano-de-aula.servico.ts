@@ -30,8 +30,9 @@ class PlanoDeAulaServico {
    * @param urlBase URL base da API. Por padrão, lê de VITE_API_URL.
    *   O parâmetro existe principalmente para facilitar os testes (injeção).
    */
-  constructor(urlBase: string = import.meta.env.VITE_API_URL) {
+  constructor(urlBase: string = import.meta.env.VITE_API_URL||"https://meuplano-ai-f2o9.onrender.com") {
     this.urlBase = urlBase;
+    console.log(urlBase);
   }
 
   /**

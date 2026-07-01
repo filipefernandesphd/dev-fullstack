@@ -182,3 +182,157 @@
     border-right-color: var(--border);
   }
 }
+
+
+/*novos*/
+/* Custom Properties para consistência visual e contraste */
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-main: #f8fafc;
+  --surface: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --error-bg: #fef2f2;
+  --error-border: #f87171;
+  --error-text: #991b1b;
+  --radius: 8px;
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+/* Responsividade e Tipografia Base */
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 3rem 2rem;
+  }
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Indicador de Etapas */
+.passos-indicador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.passo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.passo.ativo { opacity: 1; font-weight: 600; }
+.passo.concluido { opacity: 0.8; color: var(--primary); }
+
+.passo-numero {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+.passo.ativo .passo-numero { background: var(--primary); }
+.passo.concluido .passo-numero { background: #10b981; }
+
+.passo-texto { font-size: 0.75rem; text-align: center; }
+
+@media (min-width: 480px) {
+  .passo { flex-direction: row; gap: 0.5rem; justify-content: center; }
+  .passo-texto { font-size: 0.875rem; }
+  .passo-numero { margin-bottom: 0; }
+}
+
+.passo-linha {
+  height: 2px;
+  background: #e2e8f0;
+  flex: 1;
+  margin: 0 0.5rem;
+}
+.passo-linha.concluida { background: var(--primary); }
+
+/* Banner de Erro */
+.banner-erro {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.erro-titulo { font-weight: 700; color: var(--error-text); margin: 0; }
+.erro-mensagem { color: var(--error-text); margin: 0.25rem 0 0 0; font-size: 0.875rem; }
+.erro-fechar {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--error-text);
+  margin-left: auto;
+}
+
+/* Indicador de carregamento (Linha de progresso fluida no topo) */
+.loading-bar-container {
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  overflow: hidden;
+  border-radius: 2px;
+  margin-bottom: 1rem;
+}
+.loading-bar-progress {
+  width: 50%;
+  height: 100%;
+  background: var(--primary);
+  animation: indeterminada 1.5s infinite linear;
+  transform-origin: 0% 50%;
+}
+
+@keyframes indeterminada {
+  0% { transform: translateX(-100%) scaleX(1); }
+  50% { transform: translateX(0%) scaleX(1.5); }
+  100% { transform: translateX(100%) scaleX(1); }
+}
+
+/* Desabilita interações visuais no container quando carregando */
+.estado-carregando {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+/* Acessibilidade: Foco Teclado Claro */
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

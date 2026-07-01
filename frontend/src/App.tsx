@@ -24,6 +24,10 @@ import FormularioEntrada from './modulos/planos-de-aula/componentes/FormularioEn
 import FormularioRascunho from './modulos/planos-de-aula/componentes/FormularioRascunho';
 import VisualizacaoRelatorio from './modulos/planos-de-aula/componentes/VisualizacaoRelatorio';
 
+
+// IMPORTAÇÃO DOS ESTILOS: Necessário para carregar o layout, responsividade e acessibilidade visual.
+import './App.css';
+
 /**
  * Etapas possíveis do fluxo principal.
  */
@@ -56,6 +60,11 @@ function App() {
    * Gera o rascunho a partir da descrição e avança para a etapa de revisão.
    */
   async function aoGerarRascunho(descricao: string) {
+    // Validação no cliente básica (Garantia extra caso o componente filho mude)
+    if (descricao.trim().length < 10) {
+      setErro('A descrição precisa ter pelo menos 10 caracteres.');
+      return;
+    }
     setCarregando(true);
     setErro(null);
 
@@ -128,7 +137,49 @@ function App() {
 
   return (
     <main className="app">
+    <header className="app-header">
       <h1>MeuPlano.AI</h1>
+        {/* MELHORIA: Indicador de Etapas Visual e Acessível */}
+        <nav aria-label="Progresso do plano de aula" className="passos-indicador">
+          <div className={`passo ${etapa === 'entrada' ? 'ativo' : ''} ${etapa !== 'entrada' ? 'concluido' : ''}`}>
+            <span className="passo-numero">1</span>
+            <span className="passo-texto">Descrição</span>
+          </div>
+          <div className={`passo-linha ${etapa !== 'entrada' ? 'concluida' : ''}`} />
+          
+          <div className={`passo ${etapa === 'formulario' ? 'ativo' : ''} ${etapa === 'relatorio' ? 'concluido' : ''}`}>
+            <span className="passo-numero">2</span>
+            <span className="passo-texto">Revisão</span>
+          </div>
+          <div className={`passo-linha ${etapa === 'relatorio' ? 'concluida' : ''}`} />
+          
+          <div className={`passo ${etapa === 'relatorio' ? 'ativo' : ''}`}>
+            <span className="passo-numero">3</span>
+            <span className="passo-texto">Plano Final</span>
+          </div>
+        </nav>
+      </header>
+
+      {/* MELHORIA: Erros Visíveis e Amigáveis com Banner Destacado */}
+      {erro && (
+        <div className="banner-erro" role="alert" aria-live="assertive">
+          <span className="erro-icone" aria-hidden="true">⚠️</span>
+          <div className="erro-conteudo">
+            <p className="erro-titulo">Ops, algo deu errado</p>
+            <p className="erro-mensagem">{erro}</p>
+          </div>
+          <button className="erro-fechar" onClick={() => setErro(null)} aria-label="Fechar alerta">
+            &times;
+          </button>
+        </div>
+      )}
+
+      {/* MELHORIA: Feedback de Carregamento Global*/}
+      {carregando && (
+        <div className="loading-bar-container" aria-hidden="true">
+          <div className="loading-bar-progress" />
+        </div>
+      )}
 
       {/* Etapa 1: entrada em linguagem natural */}
       {etapa === 'entrada' && (

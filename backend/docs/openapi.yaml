@@ -15,7 +15,7 @@ servers:
 tags:
   - name: Planos de Aula
     description: Endpoints relacionados à criação e gerenciamento de planos de aula
-
+#
 # Definição dos caminhos (endpoints) da API.
 # Cada caminho é referenciado a um arquivo YAML separado para melhor organização e manutenção da documentação.
 paths:
