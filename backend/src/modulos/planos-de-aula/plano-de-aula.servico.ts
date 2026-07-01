@@ -1,3 +1,4 @@
+import { PlanoDeAulaRepositorio } from './plano-de-aula.repositorio';
 import { IaServico } from "../ia/ia.servico";
 
 import {
@@ -54,6 +55,7 @@ class PlanoDeAulaServico {
      * Serviço genérico de comunicação com provedores de IA.
      */
     private readonly iaServico: IaServico;
+    private readonly planoDeAulaRepositorio: PlanoDeAulaRepositorio;
 
     /**
      * Cria uma nova instância do serviço de plano de aula.
@@ -63,6 +65,7 @@ class PlanoDeAulaServico {
      */
     constructor() {
         this.iaServico = new IaServico();
+        this.planoDeAulaRepositorio = new PlanoDeAulaRepositorio();
     }
 
     /**
@@ -152,6 +155,14 @@ class PlanoDeAulaServico {
         );
 
         this.validarPlanoFinal(planoFinal);
+        try {
+            await this.planoDeAulaRepositorio.salvarPlanoFinal(planoFinal);
+        } catch (erro) {
+            console.error(
+                'Não foi possível persistir o plano de aula final no MongoDB.',
+                erro,
+            );
+        }
 
         return planoFinal;
     }

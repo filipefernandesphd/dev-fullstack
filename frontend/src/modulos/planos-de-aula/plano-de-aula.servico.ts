@@ -30,7 +30,7 @@ class PlanoDeAulaServico {
    * @param urlBase URL base da API. Por padrão, lê de VITE_API_URL.
    *   O parâmetro existe principalmente para facilitar os testes (injeção).
    */
-  constructor(urlBase: string = import.meta.env.VITE_API_URL) {
+  constructor(urlBase: string = import.meta.env.VITE_API_URL || 'http://localhost:3333') {
     this.urlBase = urlBase;
   }
 
