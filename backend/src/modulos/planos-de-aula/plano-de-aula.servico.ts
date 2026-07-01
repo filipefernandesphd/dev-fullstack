@@ -1,4 +1,6 @@
 import { IaServico } from "../ia/ia.servico";
+import { salvarPlanoFinal } from "./plano-de-aula.repositorio";
+
 
 import {
     criarPromptGerarPlanoFinal,
@@ -140,6 +142,8 @@ class PlanoDeAulaServico {
      * @throws Error Caso o rascunho esteja incompleto.
      * @throws Error Caso a IA retorne JSON inválido ou incompleto.
      */
+    
+    
     async gerarPlanoFinal(
         rascunhoRevisado: PlanoDeAulaRascunho,
     ): Promise<PlanoDeAulaFinal> {
@@ -148,13 +152,21 @@ class PlanoDeAulaServico {
         const prompt = criarPromptGerarPlanoFinal(rascunhoRevisado);
 
         const planoFinal = await this.iaServico.gerarJson<PlanoDeAulaFinal>(
-            prompt,
+        prompt,
         );
 
         this.validarPlanoFinal(planoFinal);
 
+        if (process.env.MONGO_URI) {
+        try {
+            await salvarPlanoFinal(planoFinal);
+        } catch (erroPersistencia) {
+            console.error("Erro ao persistir plano final no MongoDB:", erroPersistencia);
+        }
+        }
+        
         return planoFinal;
-    }
+  }
 
     /**
      * Valida se um objeto possui a estrutura mínima esperada

@@ -56,12 +56,17 @@ function FormularioEntrada({ onGerar, carregando, erro }: Props) {
         onChange={(evento) => setDescricao(evento.target.value)}
       />
 
+      <p className="contador">
+        {descricao.length}/10 caracteres mínimos
+      </p>
+
       {/* Exibe a mensagem de erro retornada pela API, se houver. */}
       {erro && <p role="alert">{erro}</p>}
 
-      <button type="submit" disabled={carregando}>
-        {carregando ? 'Gerando...' : 'Gerar plano'}
-      </button>
+
+      <button type="submit" disabled={carregando || descricao.trim().length < 10} > {carregando ? 'Gerando...' : 'Gerar plano'} </button>
+
+      
     </form>
   );
 }

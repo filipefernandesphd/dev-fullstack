@@ -3,7 +3,10 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
+
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
+
 
 /**
  * Propriedades do componente de visualização do relatório.
@@ -27,8 +30,48 @@ type Props = {
  * @param props Propriedades do componente.
  */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
+  const [copiado, setCopiado] = useState(false);
   // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
+  //acoes para o botao de copiar relatório
+
+  async function copiarRelatorio() {
+    const textoCompleto = `
+Título: ${planoFinal.titulo}
+
+Disciplina: ${plano.disciplina}
+Curso: ${plano.curso}
+Nível: ${plano.nivel}
+Duração: ${plano.duracao}
+Tema: ${plano.tema}
+
+Objetivos:
+${plano.objetivos.map((objetivo) => `- ${objetivo}`).join('\n')}
+
+Conteúdos:
+${plano.conteudos.map((conteudo) => `- ${conteudo}`).join('\n')}
+
+Metodologia:
+${plano.metodologia}
+
+Recursos:
+${plano.recursos.map((recurso) => `- ${recurso}`).join('\n')}
+
+Avaliação:
+${plano.avaliacao}
+
+Relatório:
+${planoFinal.relatorio}
+`;
+
+    await navigator.clipboard.writeText(textoCompleto);
+
+    setCopiado(true);
+
+    setTimeout(() => {
+      setCopiado(false);
+    }, 2000);
+  }
 
   return (
     <section>
@@ -93,6 +136,12 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
       */}
       <pre>{planoFinal.relatorio}</pre>
 
+
+      {copiado && <p className="mensagem-sucesso">Relatório copiado!</p>}
+
+      <button type="button" onClick={copiarRelatorio}>
+        Copiar relatório
+      </button>    
       <button type="button" onClick={onReiniciar}>
         Novo plano
       </button>

@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-
 import path from 'path';
 
 const env = process.env.NODE_ENV ?? 'development';
@@ -9,8 +8,9 @@ dotenv.config({
 });
 
 export const config = {
-    port: Number(process.env.PORT) ?? 3333,
+    port: Number(process.env.PORT ?? 3333),
     urlApi: `http://localhost:${process.env.PORT ?? 3333}`,
     nodeEnv: env,
     corsOrigin: process.env.CORS_ORIGIN ?? '*',
+    mongoUri: process.env.MONGO_URI,
 };

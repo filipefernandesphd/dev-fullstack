@@ -16,6 +16,13 @@ jobs:
     backend:
         name: Testar e build backend
         runs-on: ubuntu-latest
+
+        services:
+            mongo:
+                image: mongo:latest
+                ports:
+                    - 27017:27017
+
         steps:
             - name: Baixar código
               uses: actions/checkout@v4
@@ -38,7 +45,3 @@ jobs:
             - name: Rodar build
               working-directory: ./backend
               run: npm run build
-        
-
-
-    
