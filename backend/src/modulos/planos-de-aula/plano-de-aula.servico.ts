@@ -7,34 +7,18 @@ import {
 } from "./plano-de-aula.prompts";
 
 import { PlanoDeAulaRascunho } from "./plano-de-aula.tipos";
+import { planoDeAulaRepositorio } from "./plano-de-aula.repositorio";
 
 /**
  * Representa a resposta esperada da IA ao gerar a versão final
  * do plano de aula.
  */
 export type PlanoDeAulaFinal = {
-    /**
-     * Título principal do plano de aula final.
-     */
     titulo: string;
-
-    /**
-     * Dados estruturados do plano de aula.
-     */
     plano: PlanoDeAulaRascunho;
-
-    /**
-     * Texto final em formato de relatório, pronto para exibição ao professor.
-     */
     relatorio: string;
 };
 
-/**
- * Campos obrigatórios do rascunho de plano de aula.
- *
- * Essa lista é usada para validar se a resposta da IA respeitou
- * o contrato esperado pela API.
- */
 const CAMPOS_OBRIGATORIOS_RASCUNHO: Array<keyof PlanoDeAulaRascunho> = [
     'titulo',
     'disciplina',
@@ -50,31 +34,12 @@ const CAMPOS_OBRIGATORIOS_RASCUNHO: Array<keyof PlanoDeAulaRascunho> = [
 ];
 
 class PlanoDeAulaServico {
-    /**
-     * Serviço genérico de comunicação com provedores de IA.
-     */
     private readonly iaServico: IaServico;
 
-    /**
-     * Cria uma nova instância do serviço de plano de aula.
-     *
-     * A instância de IaServico lê AI_API_KEY, AI_MODEL e AI_API_URL
-     * diretamente de process.env.
-     */
     constructor() {
         this.iaServico = new IaServico();
     }
 
-    /**
-     * Gera o primeiro rascunho estruturado de plano de aula a partir
-     * da descrição livre informada pelo professor.
-     *
-     * @param descricao Descrição em linguagem natural enviada pelo professor.
-     * @returns Rascunho estruturado de uma única aula.
-     *
-     * @throws Error Caso a descrição esteja vazia.
-     * @throws Error Caso a IA retorne JSON inválido ou incompleto.
-     */
     async gerarRascunho(descricao: string): Promise<PlanoDeAulaRascunho> {
         if (!descricao || descricao.trim().length === 0) {
             throw new Error('A descrição do plano de aula é obrigatória.');
@@ -82,27 +47,9 @@ class PlanoDeAulaServico {
 
         const prompt = criarPromptGerarRascunho(descricao);
 
-        const rascunho = await this.iaServico.gerarJson<PlanoDeAulaRascunho>(
-            prompt,
-        );
-
-        // this.validarRascunho(rascunho);
-
-        return rascunho;
+        return await this.iaServico.gerarJson<PlanoDeAulaRascunho>(prompt);
     }
 
-    /**
-     * Melhora um rascunho existente de plano de aula com base nas
-     * novas instruções enviadas pelo professor.
-     *
-     * @param rascunhoAtual Rascunho atual do plano de aula.
-     * @param instrucoes Instruções adicionais para melhoria do rascunho.
-     * @returns Rascunho melhorado de uma única aula.
-     *
-     * @throws Error Caso o rascunho atual esteja incompleto.
-     * @throws Error Caso as instruções estejam vazias.
-     * @throws Error Caso a IA retorne JSON inválido ou incompleto.
-     */
     async melhorarRascunho(
         rascunhoAtual: PlanoDeAulaRascunho,
         instrucoes: string,
@@ -115,31 +62,14 @@ class PlanoDeAulaServico {
 
         const prompt = criarPromptMelhorarRascunho(rascunhoAtual, instrucoes);
 
-        const rascunhoMelhorado =
+        const resultado =
             await this.iaServico.gerarJson<PlanoDeAulaRascunho>(prompt);
 
-        this.validarRascunho(rascunhoMelhorado);
+        this.validarRascunho(resultado);
 
-        return rascunhoMelhorado;
+        return resultado;
     }
 
-    /**
-     * Gera a versão final do plano de aula em formato de relatório.
-     *
-     * O prompt atual solicita que a IA retorne um JSON contendo:
-     * - titulo;
-     * - plano;
-     * - relatorio.
-     *
-     * Por isso, este método usa gerarJson<PlanoDeAulaFinal>(),
-     * e não gerarTexto().
-     *
-     * @param rascunhoRevisado Rascunho revisado pelo professor.
-     * @returns Plano de aula final com dados estruturados e relatório textual.
-     *
-     * @throws Error Caso o rascunho esteja incompleto.
-     * @throws Error Caso a IA retorne JSON inválido ou incompleto.
-     */
     async gerarPlanoFinal(
         rascunhoRevisado: PlanoDeAulaRascunho,
     ): Promise<PlanoDeAulaFinal> {
@@ -147,23 +77,37 @@ class PlanoDeAulaServico {
 
         const prompt = criarPromptGerarPlanoFinal(rascunhoRevisado);
 
-        const planoFinal = await this.iaServico.gerarJson<PlanoDeAulaFinal>(
-            prompt,
-        );
+        const planoFinal =
+            await this.iaServico.gerarJson<PlanoDeAulaFinal>(prompt);
 
         this.validarPlanoFinal(planoFinal);
+
+        /**
+         * PERSISTÊNCIA SEGURA (não interfere no contrato da API)
+         *
+         * Regras:
+         * - nunca quebrar endpoint
+         * - nunca alterar retorno
+         * - salvar apenas campos necessários
+         */
+        try {
+            if (process.env.MONGO_URL) {
+                await planoDeAulaRepositorio.salvar({
+                    titulo: planoFinal.titulo,
+                    plano: planoFinal.plano,
+                    relatorio: planoFinal.relatorio,
+                });
+            }
+        } catch (erro) {
+            console.error(
+                '[MongoDB] Falha ao salvar plano de aula (não fatal):',
+                erro,
+            );
+        }
 
         return planoFinal;
     }
 
-    /**
-     * Valida se um objeto possui a estrutura mínima esperada
-     * para um rascunho de plano de aula.
-     *
-     * @param rascunho Objeto a ser validado.
-     *
-     * @throws Error Caso o rascunho esteja ausente, incompleto ou inválido.
-     */
     private validarRascunho(rascunho: PlanoDeAulaRascunho): void {
         if (!rascunho || typeof rascunho !== 'object') {
             throw new Error('O rascunho do plano de aula é obrigatório.');
@@ -171,9 +115,7 @@ class PlanoDeAulaServico {
 
         for (const campo of CAMPOS_OBRIGATORIOS_RASCUNHO) {
             if (!(campo in rascunho)) {
-                throw new Error(
-                    `O campo "${campo}" é obrigatório no rascunho do plano de aula.`,
-                );
+                throw new Error(`Campo obrigatório ausente: ${campo}`);
             }
         }
 
@@ -191,17 +133,9 @@ class PlanoDeAulaServico {
         this.validarListaDeTextos(rascunho.recursos, 'recursos');
     }
 
-    /**
-     * Valida se o plano final retornado pela IA respeita
-     * a estrutura solicitada pelo prompt.
-     *
-     * @param planoFinal Objeto retornado pela IA.
-     *
-     * @throws Error Caso o plano final esteja ausente, incompleto ou inválido.
-     */
     private validarPlanoFinal(planoFinal: PlanoDeAulaFinal): void {
         if (!planoFinal || typeof planoFinal !== 'object') {
-            throw new Error('O plano de aula final é obrigatório.');
+            throw new Error('Plano final inválido.');
         }
 
         this.validarTexto(planoFinal.titulo, 'titulo');
@@ -209,44 +143,21 @@ class PlanoDeAulaServico {
         this.validarTexto(planoFinal.relatorio, 'relatorio');
     }
 
-    /**
-     * Valida se um valor é uma string não vazia.
-     *
-     * @param valor Valor a ser validado.
-     * @param nomeCampo Nome do campo usado na mensagem de erro.
-     *
-     * @throws Error Caso o valor não seja uma string válida.
-     */
-    private validarTexto(valor: unknown, nomeCampo: string): void {
+    private validarTexto(valor: unknown, campo: string): void {
         if (typeof valor !== 'string' || valor.trim().length === 0) {
-            throw new Error(`O campo "${nomeCampo}" deve ser um texto não vazio.`);
+            throw new Error(`Campo inválido: ${campo}`);
         }
     }
 
-    /**
-     * Valida se um valor é uma lista não vazia de strings não vazias.
-     *
-     * @param valor Valor a ser validado.
-     * @param nomeCampo Nome do campo usado na mensagem de erro.
-     *
-     * @throws Error Caso o valor não seja uma lista válida de textos.
-     */
-    private validarListaDeTextos(valor: unknown, nomeCampo: string): void {
+    private validarListaDeTextos(valor: unknown, campo: string): void {
         if (!Array.isArray(valor) || valor.length === 0) {
-            throw new Error(`O campo "${nomeCampo}" deve ser uma lista não vazia.`);
+            throw new Error(`Lista inválida: ${campo}`);
         }
 
-        const todosOsItensSaoValidos = valor.every(
-            (item) => typeof item === 'string' && item.trim().length > 0,
-        );
-
-        if (!todosOsItensSaoValidos) {
-            throw new Error(
-                `Todos os itens do campo "${nomeCampo}" devem ser textos não vazios.`,
-            );
+        if (!valor.every(v => typeof v === 'string' && v.trim())) {
+            throw new Error(`Itens inválidos em: ${campo}`);
         }
     }
-
 }
 
 export { PlanoDeAulaServico };

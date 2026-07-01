@@ -5,62 +5,63 @@
 
 import { useState, type FormEvent } from 'react';
 
-/**
- * Propriedades do componente de entrada.
- */
 type Props = {
-  /**
-   * Função chamada ao submeter o formulário, recebendo a descrição digitada.
-   */
   onGerar: (descricao: string) => void;
-
-  /**
-   * Indica que uma requisição está em andamento (desabilita o botão).
-   */
   carregando: boolean;
-
-  /**
-   * Mensagem de erro a ser exibida (ou null quando não há erro).
-   */
   erro: string | null;
 };
 
-/**
- * Tela inicial: campo de texto livre + botão para gerar o rascunho.
- *
- * @param props Propriedades do componente.
- */
 function FormularioEntrada({ onGerar, carregando, erro }: Props) {
-  // Estado local com o texto digitado pelo professor.
   const [descricao, setDescricao] = useState('');
 
-  /**
-   * Trata o envio do formulário, evitando o recarregamento da página e
-   * repassando a descrição para o componente pai.
-   */
+  const descricaoTrim = descricao.trim();
+  const descricaoValida = descricaoTrim.length >= 10;
+
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    onGerar(descricao);
+
+    // UX: bloqueio extra de segurança (não substitui backend)
+    if (!descricaoValida || carregando) return;
+
+    onGerar(descricaoTrim);
   }
 
   return (
     <form onSubmit={aoEnviar}>
       <h2>Descreva sua aula</h2>
 
+      {/* UX: indicador de etapa */}
+      <p className="etapas">
+        Etapa 1 de 3: Descrição do plano de aula
+      </p>
+
       <label htmlFor="descricao">Descrição do plano de aula</label>
+
       <textarea
         id="descricao"
         rows={4}
         value={descricao}
         placeholder="Ex.: Quero uma aula de 50 minutos sobre introdução à engenharia de software para graduação."
-        onChange={(evento) => setDescricao(evento.target.value)}
+        onChange={(e) => setDescricao(e.target.value)}
+        aria-invalid={!descricaoValida && descricaoTrim.length > 0}
       />
 
-      {/* Exibe a mensagem de erro retornada pela API, se houver. */}
-      {erro && <p role="alert">{erro}</p>}
+      {/* UX: validação antecipada (cliente) */}
+      {descricaoTrim.length > 0 && !descricaoValida && (
+        <p role="alert" style={{ color: 'orange' }}>
+          A descrição deve ter pelo menos 10 caracteres.
+        </p>
+      )}
 
-      <button type="submit" disabled={carregando}>
-        {carregando ? 'Gerando...' : 'Gerar plano'}
+      {/* Erro da API */}
+      {erro && (
+        <p role="alert" style={{ color: 'red' }}>
+          {erro}
+        </p>
+      )}
+
+      <button type="submit" disabled={!descricaoValida || carregando}>
+        {carregando ? 'Gerando plano...' : 'Gerar plano'}
       </button>
     </form>
   );
