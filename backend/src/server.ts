@@ -1,12 +1,20 @@
-import { config } from './config/env';
+import app from './app'; 
+import mongoose from 'mongoose';
 
-import app from './app';
+// Inicialização segura e condicional do Banco de Dados MongoDB
+const mongoUrl = process.env.MONGO_URL;
 
-import { setupSwagger } from './config/swagger';
+if (mongoUrl) {
+  mongoose.connect(mongoUrl)
+    .then(() => console.log("✓ Mongoose conectado com sucesso à instância do MongoDB."))
+    .catch((erro) => console.error("Falha inicial na conexão do banco de dados:", erro.message));
+} else {
+  console.log("Executando sem banco de dados configurado (Variável MONGO_URL ausente).");
+}
 
-setupSwagger(app);
+// Configuração de porta dinâmica injetada automaticamente pelo Render ou fallback local (3333)
+const porta = process.env.PORT || 3333;
 
-app.listen(config.port, ()=>{
-    console.log(`Servidor executando em ${config.urlApi} (ambiente: ${config.nodeEnv})`);
-    console.log(`Documentação da API disponível em ${config.urlApi}/docs`);
+app.listen(porta, () => {
+  console.log(`✓ Servidor escutando dinamicamente na porta ${porta}`);
 });

@@ -10,7 +10,7 @@ import type { PlanoDeAulaRascunho } from "./plano-de-aula.tipos";
  * @returns String JSON formatada com indentação.
  */
 function formatarJson(valor: unknown): string {
-  return JSON.stringify(valor, null, 2);
+    return JSON.stringify(valor, null, 2);
 }
 
 /**

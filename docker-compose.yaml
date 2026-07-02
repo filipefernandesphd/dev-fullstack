@@ -1,62 +1,51 @@
-name: meuplanoai
+version: '3.8'
 
 services:
-  backend-dev:
-    container_name: backend-dev
+  mongodb:
+    image: mongo:latest
+    container_name: meuplano_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - dados_mongo:/data/db
+    networks:
+      - rede_meuplano
+
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    container_name: meuplano_backend
     ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
-    env_file:
-      - ./backend/.env.development
-
-  backend-test:
-    container_name: backend-test
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: test
-    env_file:
-      - ./backend/.env.development
-
-  ollama:
-    container_name: ollama
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-  # Serviço do frontend (desenvolvimento)
-  frontend-dev:
-    container_name: frontend-dev
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules                     # Evita apagar node_modules do container
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"   # variável a partir de ./.env (host:container)
+      - "3333:3333"
     environment:
-      - FRONTEND_PORT=${FRONTEND_PORT}        # porta usada pelo Vite dentro do container
-    env_file:
-      - ./frontend/.env.development           # injeta VITE_API_URL no ambiente
+      - PORT=3333
+      - MONGO_URL=mongodb://mongodb:27017/meuplano_ai
+      - AI_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+      - AI_MODEL=gemini-2.0-flash
+      - AI_API_KEY=${AI_API_KEY}
+    depends_on:
+      - mongodb
+    networks:
+      - rede_meuplano
 
-  frontend-test:
-    container_name: frontend-test
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: test
-    env_file:
-      - ./frontend/.env.development           # injeta variaveis dentro do ambiente
+    container_name: meuplano_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3333
+    depends_on:
+      - backend
+    networks:
+      - rede_meuplano
 
 volumes:
-  ollama_data: 
+  dados_mongo:
+
+networks:
+  rede_meuplano:
+    driver: bridge

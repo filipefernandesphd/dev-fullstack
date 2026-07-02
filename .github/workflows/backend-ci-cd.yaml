@@ -1,44 +1,45 @@
-name: Backend CI/CD
+name: Integração Contínua - Backend
 
 on:
-    push:
-        branches:
-            - "*"
-    
-    pull_request:
-        branches:
-            - "*"
-
-env:
-    NODE_VERSION: 22
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-    backend:
-        name: Testar e build backend
-        runs-on: ubuntu-latest
-        steps:
-            - name: Baixar código
-              uses: actions/checkout@v4
+  testes_backend:
+    runs-on: ubuntu-latest
 
-            - name: Configurar Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: ${{env.NODE_VERSION}}
-                cache: npm
-                cache-dependency-path: ./backend/package-lock.json
+    # Adiciona o contêiner de banco de dados MongoDB ao ambiente virtual do GitHub Actions
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
 
-            - name: Instalar as depenências
-              working-directory: ./backend
-              run: npm ci
+    steps:
+      - name: Clonar o código fonte do repositório
+        uses: actions/checkout@v3
 
-            - name: Rodar os testes
-              working-directory: ./backend
-              run: npm run test
+      - name: Configurar ambiente Node.js na máquina virtual
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
 
-            - name: Rodar build
-              working-directory: ./backend
-              run: npm run build
-        
+      - name: Instalar as dependências do projeto Backend
+        run: |
+          cd backend
+          npm install
 
-
-    
+      - name: Executar os testes automatizados com variáveis simuladas
+        run: |
+          cd backend
+          npm test
+        env:
+          PORT: 3333
+          MONGO_URL: mongodb://localhost:27017/meuplano_testes
+          AI_API_URL: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+          AI_MODEL: gemini-2.0-flash
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}

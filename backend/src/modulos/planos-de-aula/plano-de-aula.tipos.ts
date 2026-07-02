@@ -1,7 +1,7 @@
 /**
- * Reprenta um rascunho estrutura de plano de aula
- * POST /planos-de-aula/rascunho
- */
+*  Representar um rascunho estruturado de plano de aula
+*  POST /planos-de-aula/rascunho
+*/
 export type PlanoDeAulaRascunho = {
     titulo: string;
     disciplina: string;
@@ -17,24 +17,24 @@ export type PlanoDeAulaRascunho = {
 }
 
 /**
- * Dados necessários para gerar o primeiro plano (rascunho)
- * POST /planos-de-aula/rascunho
- */
+*  Dados necessários para gerar o primeiro plano (rascunho)
+*  POST /planos-de-aula/rascunho
+*/
 export type DadosGerarRascunho = {
     descricao: string;
 }
 
 /**
- * Dados necessários para melhorar o rascunho
+ * Dados necessáios para melhorar o rascunho
  * POST /planos-de-aula/rascunho/melhorar
  */
-export type DodosMelhorarRascunho = {
+export type DadosMelhorarRascunho = {
     rascunhoAtual: PlanoDeAulaRascunho;
     instrucoes: string;
 }
 
 /**
- * Dados necessários para gerar a versão final do plano de aula
+ * Dados necessáios para gerar a versão final do plano de aula
  * POST /planos-de-aula/final
  */
 export type DadosGerarPlanoFinal = {
@@ -46,12 +46,12 @@ export type DadosGerarPlanoFinal = {
  */
 export type PlanoDeAulaFinal = {
     titulo: string;
-    plano: PlanoDeAulaRascunho
-    relatorio: string
+    plano: PlanoDeAulaRascunho;
+    relatorio: string;
 }
 
 /**
- * Reposta da API de IA
+ * Resposta da API da IA
  */
 export type RespostaApi<T> = {
     sucesso: boolean;

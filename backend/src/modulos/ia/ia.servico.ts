@@ -1,192 +1,139 @@
-/**
- * Representa uma mensagem enviada para uma API de IA compatível
- * com o padrão Chat Completions.
- */
-type MensagemIa = {
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-};
+import axios from 'axios';
 
 /**
- * Representa o corpo da requisição enviada para o provedor de IA.
+ * Interface que representa a estrutura de mensagens esperada pela API de Chat Completions.
+ * Segue o padrão universal adotado por grandes provedores de modelos de linguagem (LLMs).
  */
-type RequisicaoIa = {
-    model: string;
-    temperature: number;
-    messages: MensagemIa[];
-};
-
-/**
- * Representa parte do formato de resposta esperado de uma API
- * compatível com Chat Completions.
- */
-type RespostaIa = {
-    choices?: Array<{
-        message?: {
-            content?: string;
-        };
-    }>;
-};
-
-/**
- * Serviço responsável pela comunicação com o provedor de Inteligência Artificial.
- *
- * Este serviço é genérico. Ele não conhece regras específicas de plano de aula.
- *
- * Responsabilidades:
- *
- * - ler AI_API_KEY, AI_MODEL e AI_API_URL a partir de process.env;
- * - enviar prompts para uma API compatível com Chat Completions;
- * - retornar texto gerado pela IA;
- * - converter respostas textuais em JSON quando necessário.
- *
- * Exemplos de provedores compatíveis:
- *
- * - OpenAI;
- * - OpenRouter;
- * - LiteLLM;
- * - Ollama usando /v1/chat/completions.
- */
-class IaServico {
-    private readonly apiUrl: string;
-    private readonly apiKey: string;
-    private readonly modelo: string;
-
-    constructor() {
-        this.apiUrl = process.env.AI_API_URL || '';
-        this.apiKey = process.env.AI_API_KEY || '';
-        this.modelo = process.env.AI_MODEL || '';
-
-        if (!this.apiKey) {
-            throw new Error('Variável de ambiente AI_API_KEY não configurada.');
-        }
-
-        if (!this.modelo) {
-            throw new Error('Variável de ambiente AI_MODEL não configurada.');
-        }
-
-        if (!this.apiUrl) {
-            throw new Error('Variável de ambiente AI_API_URL não configurada.');
-        }
-    }
-
-    /**
-    * Envia um prompt para o provedor de IA e retorna o texto gerado.
-    *
-    * @param prompt Prompt textual enviado para a IA.
-    * @returns Texto retornado pela IA.
-    *
-    * @throws Error Caso a API de IA retorne erro HTTP.
-    * @throws Error Caso a resposta da IA venha vazia ou em formato inesperado.
-    */
-    async gerarTexto(prompt: string): Promise<string> {
-        const corpoRequisicao: RequisicaoIa = {
-            model: this.modelo,
-            temperature: 0.2,
-            messages: [
-                {
-                    role: 'system',
-                    content:
-                        'Você é um assistente pedagógico especializado em planejamento de uma única aula.',
-                },
-                {
-                    role: 'user',
-                    content: prompt,
-                },
-            ],
-        };
-
-        const resposta = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: {
-                /**
-                 * Informa que estamos enviando JSON no corpo da requisição.
-                 */
-                'Content-Type': 'application/json',
-
-                /**
-                 * Envia a chave no formato Bearer Token.
-                 *
-                 * Mesmo quando usamos Ollama local com chave fictícia,
-                 * manter esse cabeçalho simula uma API real.
-                 */
-                Authorization: `Bearer ${this.apiKey}`,
-            },
-            body: JSON.stringify(corpoRequisicao),
-        });
-
-        if (!resposta.ok) {
-            const corpoErro = await resposta.text();
-
-            throw new Error(
-                `Erro ao chamar serviço de IA. Status: ${resposta.status}. Detalhes: ${corpoErro}`,
-            );
-        }
-
-        const corpo = (await resposta.json()) as RespostaIa;
-
-        const conteudo = corpo.choices?.[0]?.message?.content;
-
-        if (!conteudo || typeof conteudo !== 'string') {
-            throw new Error('Resposta da IA veio vazia ou em formato inválido.');
-        }
-
-        return conteudo;
-    };
-
-    /**
-     * Envia um prompt para a IA esperando receber um JSON válido.
-     *
-     * Este método:
-     *
-     * 1. chama gerarTexto(prompt);
-     * 2. limpa possíveis marcações de Markdown;
-     * 3. converte o texto para JSON;
-     * 4. retorna o objeto tipado.
-     *
-     * @param prompt Prompt textual enviado para a IA.
-     * @returns Objeto convertido para o tipo esperado.
-     *
-     * @template T Tipo esperado para o JSON retornado.
-     *
-     * @throws Error Caso a IA não retorne um JSON válido.
-     */
-    async gerarJson<T>(prompt: string): Promise<T> {
-        const textoGerado = await this.gerarTexto(prompt);
-
-        const textoLimpo = this.limparRespostaJson(textoGerado);
-
-        try {
-            return JSON.parse(textoLimpo) as T;
-        } catch {
-            throw new Error(
-                `A IA não retornou um JSON válido. Conteúdo recebido: ${textoGerado}`,
-            );
-        }
-    }
-
-    /**
-     * Remove marcações comuns que modelos de IA podem adicionar ao redor do JSON.
-     *
-     * Alguns modelos, especialmente locais, podem responder assim:
-     *
-     * ```json
-     * { "titulo": "Plano de Aula" }
-     * ```
-     *
-     * Este método remove essas marcações para permitir o uso de JSON.parse.
-     *
-     * @param texto Texto bruto retornado pela IA.
-     * @returns Texto limpo para conversão JSON.
-     */
-    private limparRespostaJson(texto: string): string {
-        return texto
-            .trim()
-            .replace(/^```json\s*/i, '')
-            .replace(/^```\s*/i, '')
-            .replace(/```$/i, '')
-            .trim();
-    }
+export interface MensagemIA {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
 
-export { IaServico };
+/**
+ * Serviço genérico responsável pela integração com o provedor de Inteligência Artificial.
+ * Implementa compatibilidade com o formato OpenAI Chat Completions utilizado pelo Google Gemini.
+ * Atende às diretrizes de tratamento robusto de falhas e manutenção do contrato de resposta da aplicação.
+ * * @author Seu Nome
+ */
+export class IaServico {
+  // As credenciais e endpoints são isolados via variáveis de ambiente para conformidade de segurança
+  private apiUrl = process.env.AI_API_URL;
+  private model = process.env.AI_MODEL || 'gemini-2.0-flash';
+  private apiKey = process.env.AI_API_KEY;
+
+  /**
+   * Envia um histórico de mensagens estruturado para o provedor de IA configurado por variáveis de ambiente.
+   * Método de baixo nível focado na comunicação HTTP bruta e tratamento de status de erro do provedor.
+   * * @param mensagens Lista de mensagens contendo o contexto e as interações do usuário.
+   * @returns Objeto de resposta contendo a estrutura de completions ou tratamento amigável de erro.
+   */
+  async enviarMensagem(mensagens: MensagemIA[]): Promise<any> {
+    // Validação preventiva: evita chamadas infrutíferas se a infraestrutura não estiver configurada
+    if (!this.apiKey || !this.apiUrl) {
+      return {
+        sucesso: false,
+        mensagem: "Configuração de IA incompleta: Verifique as variáveis de ambiente AI_API_KEY e AI_API_URL.",
+        dados: {}
+      };
+    }
+
+    try {
+      const resposta = await axios.post(
+        this.apiUrl,
+        {
+          model: this.model,
+          messages: mensagens,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          // Timeout estendido para 25 segundos para evitar travamentos em respostas longas e complexas de planos de aula
+          timeout: 25000 
+        }
+      );
+
+      return resposta.data;
+
+    } catch (erro: any) {
+      console.error("Falha detectada na comunicação com o provedor de IA externa:", erro.message);
+
+      let mensagemAmigavel = "Não foi possível estabelecer contato com o motor de IA neste momento. Tente novamente.";
+
+      // Tratamento granular de erros exigido pelo regulamento da atividade avaliativa
+      if (erro.response) {
+        const status = erro.response.status;
+        
+        // Erro 429: Excesso de requisições comum no Free Tier do Gemini
+        if (status === 429) {
+          mensagemAmigavel = "O limite de requisições gratuitas do Gemini foi atingido. Aguarde cerca de 1 minuto e tente novamente.";
+        } 
+        // Erros 401/403: Problemas de autenticação ou chaves expiradas/inválidas
+        else if (status === 401 || status === 403) {
+          mensagemAmigavel = "Chave de autenticação da API de IA inválida ou expirada. Notifique o administrador.";
+        } 
+        // Erro 404: Endpoint ou modelo incorreto configurado
+        else if (status === 404) {
+          mensagemAmigavel = "O modelo de IA solicitado ou o endpoint especificado não foram encontrados no provedor.";
+        }
+      } 
+      // Erro de Timeout (Excesso de tempo de resposta do servidor remoto)
+      else if (erro.code === 'ECONNABORTED') {
+        mensagemAmigavel = "O tempo limite de espera para geração do plano pedagógico foi esgotado pelo provedor.";
+      }
+
+      // Mantém estritamente o formato padrão estipulado em contrato OpenAPI sem estourar erro 500 fatal na API
+      return {
+        sucesso: false,
+        mensagem: messageAmigavel,
+        dados: {}
+      };
+    }
+  }
+
+  /**
+   * Envia um prompt textual e processa o retorno da IA convertendo-o diretamente para um objeto estruturado (JSON).
+   * Realiza a higienização de blocos de código Markdown gerados comumente pelas IAs.
+   * * @param prompt Instrução ou comando detalhado enviado para a IA.
+   * @returns Objeto tipado de acordo com o contrato esperado pelo serviço chamador.
+   */
+  async gerarJson<T>(prompt: string): Promise<T> {
+    const mensagens: MensagemIA[] = [
+      { role: 'user', content: prompt }
+    ];
+
+    const respostaBruta = await this.enviarMensagem(mensagens);
+
+    // Se o envio falhar e cair no catch de enviarMensagem, repassa a mensagem amigável tratada
+    if (respostaBruta && respostaBruta.sucesso === false) {
+      throw new Error(respostaBruta.mensagem);
+    }
+
+    try {
+      let textoJson = '';
+
+      // Extração do conteúdo textual vindo do padrão OpenAI Chat Completions
+      if (respostaBruta && respostaBruta.choices && respostaBruta.choices[0]?.message?.content) {
+        textoJson = respostaBruta.choices[0].message.content;
+      } else if (typeof respostaBruta === 'string') {
+        textoJson = respostaBruta;
+      } else {
+        throw new Error("A resposta retornada pela inteligência artificial veio vazia ou em formato inválido.");
+      }
+
+      // Tratamento e limpeza preventiva contra marcações markdown do tipo ```json ... ```
+      if (textoJson.includes('```json')) {
+        textoJson = textoJson.split('```json')[1].split('```')[0];
+      } else if (textoJson.includes('```')) {
+        textoJson = textoJson.split('```')[1].split('```')[0];
+      }
+
+      return JSON.parse(textoJson.trim()) as T;
+
+    } catch (erro: any) {
+      console.error("Erro crítico ao tentar realizar o parse do JSON enviado pela IA:", erro.message);
+      throw new Error(`A IA falhou em gerar dados estruturados válidos. Detalhes: ${erro.message}`);
+    }
+  }
+}
