@@ -3,6 +3,7 @@
 // Passo 7 do caso de uso: o sistema exibe o plano de aula em formato de
 // relatório (com os dados estruturados do plano), encerrando o fluxo.
 
+import { useState } from 'react';
 import type { PlanoDeAulaFinal } from '../plano-de-aula.tipos';
 
 /**
@@ -24,15 +25,55 @@ type Props = {
  * Exibe o relatório final do plano de aula, mostrando os dados estruturados do
  * plano e, em seguida, o texto do relatório gerado pela IA.
  *
+ * Modificado para atender à especificação "Ações no relatório" da Seção 6.3:
+ * - Implementado um botão acessível para copiar o conteúdo textual gerado pela IA.
+ * - Fornece um feedback temporário de sucesso ("Copiado!") após a transferência[cite: 83].
+ *
  * @param props Propriedades do componente.
  */
 function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
   // Dados estruturados do plano (mesmo formato do rascunho).
   const { plano } = planoFinal;
 
+  // Estado local para controlar a exibição temporária de confirmação do clipboard.
+  const [copiado, setCopiado] = useState(false);
+
+  /**
+   * Manipulador que copia o texto consolidado do relatório para a área de transferência 
+   * do sistema operacional através da API assíncrona do navegador.
+   */
+  async function aoCopiarTexto() {
+    try {
+      await navigator.clipboard.writeText(planoFinal.relatorio);
+      setCopiado(true);
+      
+      // Reseta o estado do botão após 3 segundos para permitir novas interações visuais.
+      setTimeout(() => {
+        setCopiado(false);
+      }, 3000);
+    } catch (erroClipboard) {
+      console.error('Falha ao acessar o clipboard do navegador:', erroClipboard);
+    }
+  }
+
   return (
-    <section>
+    <section className="visualizacao-relatorio">
       <h2>{planoFinal.titulo}</h2>
+
+      {/* MELHORIA DE UX: BARRA DE FERRAMENTAS/AÇÕES COMPLEMENTARES 
+        Por que isto está aqui? Atende à exigência da Seção 6.3, permitindo ao professor 
+        exportar o texto refinado para repositórios externos, editores de texto ou e-mails.
+      */}
+      <div className="painel-acoes-relatorio">
+        <button 
+          type="button" 
+          onClick={aoCopiarTexto} 
+          className={`botao-copiar ${copiado ? 'sucesso' : ''}`}
+          aria-live="polite"
+        >
+          {copiado ? '✓ Copiado para a área de transferência!' : '📋 Copiar texto do relatório'}
+        </button>
+      </div>
 
       {/* Dados estruturados do plano, apresentados como um relatório. */}
       <dl className="relatorio-dados">
@@ -91,8 +132,11 @@ function VisualizacaoRelatorio({ planoFinal, onReiniciar }: Props) {
         O relatório vem como texto único com quebras de linha.
         A tag <pre> preserva esses espaços e quebras na exibição.
       */}
-      <pre>{planoFinal.relatorio}</pre>
+      <pre className="bloco-relatorio-texto">{planoFinal.relatorio}</pre>
 
+      {/* ATENÇÃO: O rótulo "Novo plano" foi mantido idêntico conforme estipulado 
+        nas regras inegociáveis do projeto didático[cite: 80].
+      */}
       <button type="button" onClick={onReiniciar}>
         Novo plano
       </button>

@@ -1,6 +1,6 @@
 import { Router } from 'express'; 
 
-import { PlanoDeAulaControlador } from './plano-de-aula.controlador';
+import { PlanoDeAulaControlador } from './plano-de-aula-controlador'
 
 const planoDeAulaRotas = Router();
 

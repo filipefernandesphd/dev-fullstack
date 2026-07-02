@@ -2,13 +2,13 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./",
-    "outDir": "./dist",
+    "rootDir": "./",  // pasta vai conter os arquivos fontes da app
+    "outDir": "./dist",  // vai converter os arquivos typescript para javascript e vai salvar dentro da pasta 'dist'
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
-    "target": "es2025",
+    "module": "commonjs", // "module": "nodenext",
+    "target": "es2025",  // "target": "esnext",    
     "types": [
       "node",
       "vitest/globals"

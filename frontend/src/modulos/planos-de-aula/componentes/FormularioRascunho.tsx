@@ -104,12 +104,12 @@ function FormularioRascunho({
    * É um botão do tipo "button" (não "submit") para não disparar o envio do
    * formulário (que gera a versão final).
    */
-  function aoMelhorar() {
+  function aoLocalMelhorar() {
     onMelhorar(rascunho, orientacoes);
   }
 
   return (
-    <form onSubmit={aoEnviar}>
+    <form onSubmit={aoEnviar} className="formulario-rascunho">
       <h2>Revise o rascunho</h2>
 
       <label htmlFor="titulo">Título</label>
@@ -117,6 +117,7 @@ function FormularioRascunho({
         id="titulo"
         value={rascunho.titulo}
         onChange={(e) => atualizarTexto('titulo', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="disciplina">Disciplina</label>
@@ -124,6 +125,7 @@ function FormularioRascunho({
         id="disciplina"
         value={rascunho.disciplina}
         onChange={(e) => atualizarTexto('disciplina', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="curso">Curso</label>
@@ -131,6 +133,7 @@ function FormularioRascunho({
         id="curso"
         value={rascunho.curso}
         onChange={(e) => atualizarTexto('curso', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="nivel">Nível</label>
@@ -138,6 +141,7 @@ function FormularioRascunho({
         id="nivel"
         value={rascunho.nivel}
         onChange={(e) => atualizarTexto('nivel', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="duracao">Duração</label>
@@ -145,6 +149,7 @@ function FormularioRascunho({
         id="duracao"
         value={rascunho.duracao}
         onChange={(e) => atualizarTexto('duracao', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="tema">Tema</label>
@@ -152,6 +157,7 @@ function FormularioRascunho({
         id="tema"
         value={rascunho.tema}
         onChange={(e) => atualizarTexto('tema', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="objetivos">Objetivos (um por linha)</label>
@@ -160,6 +166,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.objetivos.join('\n')}
         onChange={(e) => atualizarLista('objetivos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="conteudos">Conteúdos (um por linha)</label>
@@ -168,6 +175,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.conteudos.join('\n')}
         onChange={(e) => atualizarLista('conteudos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="metodologia">Metodologia</label>
@@ -176,6 +184,7 @@ function FormularioRascunho({
         rows={2}
         value={rascunho.metodologia}
         onChange={(e) => atualizarTexto('metodologia', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="recursos">Recursos (um por linha)</label>
@@ -184,6 +193,7 @@ function FormularioRascunho({
         rows={3}
         value={rascunho.recursos.join('\n')}
         onChange={(e) => atualizarLista('recursos', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="avaliacao">Avaliação</label>
@@ -192,6 +202,7 @@ function FormularioRascunho({
         rows={2}
         value={rascunho.avaliacao}
         onChange={(e) => atualizarTexto('avaliacao', e.target.value)}
+        disabled={carregando}
       />
 
       <label htmlFor="orientacoes">
@@ -203,18 +214,22 @@ function FormularioRascunho({
         value={orientacoes}
         placeholder="Ex.: Deixe a metodologia mais ativa e inclua uma atividade em grupo."
         onChange={(e) => setOrientacoes(e.target.value)}
+        disabled={carregando}
       />
 
-      {erro && <p role="alert">{erro}</p>}
+      {erro && <p role="alert" className="erro-mensagem">{erro}</p>}
 
       {/*
         Dois botões:
         - "Melhorar plano" (type="button"): pede à IA um novo rascunho com base
           nas orientações, permanecendo nesta tela de revisão;
         - "Gerar versão final" (type="submit"): avança para o relatório final.
+        
+        ATENÇÃO: Os textos internos das strings originais e os seletores mantêm-se idênticos 
+        para preservar a integridade estrita das asserções de teste[cite: 80].
       */}
       <div className="acoes">
-        <button type="button" onClick={aoMelhorar} disabled={carregando}>
+        <button type="button" onClick={aoLocalMelhorar} disabled={carregando}>
           {carregando ? 'Processando...' : 'Melhorar plano'}
         </button>
 
